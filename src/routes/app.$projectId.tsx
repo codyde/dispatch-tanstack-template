@@ -20,7 +20,8 @@ const STATUS_ORDER: { id: TaskStatus; label: string }[] = [
 
 function Board() {
   const { projectId } = Route.useParams()
-  const { data: tasks } = useSuspenseQuery(tasksQuery(projectId))
+  const { data } = useSuspenseQuery(tasksQuery(projectId))
+  const { tasks, runningIds } = data
   const { data: projects } = useSuspenseQuery(projectsQuery)
   const project = projects.find((p) => p.id === projectId)
   const queryClient = useQueryClient()
@@ -92,7 +93,7 @@ function Board() {
                   {project.key}-{t.number}
                 </span>
                 <span className="title">{t.title}</span>
-                {t.status === 'in_progress' && (
+                {runningIds.includes(t.id) && (
                   <span className="chip-running">
                     <span className="pulse" /> sandbox
                   </span>

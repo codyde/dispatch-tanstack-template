@@ -502,6 +502,31 @@ select:focus-visible {
   margin-left: auto;
 }
 
+.new-proj-btn {
+  display: flex;
+  align-items: center;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  color: var(--faint);
+  font-size: 13px;
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+
+.new-proj-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.new-proj {
+  padding: 2px 4px;
+}
+
+.new-proj input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
 .sidebar .foot {
   margin-top: auto;
   padding: 8px 10px;

@@ -13,16 +13,48 @@ export const listProjects = createServerFn({ method: 'GET' }).handler(async () =
 export const listTasks = createServerFn({ method: 'GET' })
   .validator(z.object({ projectId: z.string() }))
   .handler(async ({ data }) => {
-    const { db, tasks } = await import('@/db')
-    const { eq, desc } = await import('drizzle-orm')
-    return db.select().from(tasks).where(eq(tasks.projectId, data.projectId)).orderBy(desc(tasks.number))
+    const { db, tasks, runs } = await import('@/db')
+    const { eq, desc, and, inArray } = await import('drizzle-orm')
+    const rows = await db
+      .select()
+      .from(tasks)
+      .where(eq(tasks.projectId, data.projectId))
+      .orderBy(desc(tasks.number))
+    const runningIds =
+      rows.length === 0
+        ? []
+        : (
+            await db
+              .select({ taskId: runs.taskId })
+              .from(runs)
+              .where(and(eq(runs.status, 'running'), inArray(runs.taskId, rows.map((r) => r.id))))
+          ).map((r) => r.taskId)
+    return { tasks: rows, runningIds }
+  })
+
+export const createProject = createServerFn({ method: 'POST' })
+  .validator(z.object({ name: z.string().min(1).max(60) }))
+  .handler(async ({ data }) => {
+    const { db, projects } = await import('@/db')
+    const existing = await db.select({ key: projects.key }).from(projects)
+    const taken = new Set(existing.map((p) => p.key))
+    let base = data.name.replace(/[^a-zA-Z0-9]/g, '').slice(0, 3).toUpperCase() || 'PRJ'
+    let key = base
+    let i = 2
+    while (taken.has(key)) key = `${base.slice(0, 2)}${i++}`
+    const palette = ['#d3481b', '#5b7d9e', '#4a7d4f', '#c08a1f', '#7d5ba6']
+    const [project] = await db
+      .insert(projects)
+      .values({ name: data.name, key, color: palette[existing.length % palette.length] })
+      .returning()
+    return project
   })
 
 export const getTask = createServerFn({ method: 'GET' })
   .validator(z.object({ taskId: z.string() }))
   .handler(async ({ data }) => {
-    const { db, tasks, projects, activities } = await import('@/db')
-    const { eq, asc } = await import('drizzle-orm')
+    const { db, tasks, projects, activities, runs } = await import('@/db')
+    const { eq, asc, and } = await import('drizzle-orm')
     const [task] = await db.select().from(tasks).where(eq(tasks.id, data.taskId))
     if (!task) throw new Error('task not found')
     const [project] = await db.select().from(projects).where(eq(projects.id, task.projectId))
@@ -31,7 +63,12 @@ export const getTask = createServerFn({ method: 'GET' })
       .from(activities)
       .where(eq(activities.taskId, task.id))
       .orderBy(asc(activities.createdAt))
-    return { task, project, feed }
+    const [activeRun] = await db
+      .select()
+      .from(runs)
+      .where(and(eq(runs.taskId, task.id), eq(runs.status, 'running')))
+      .limit(1)
+    return { task, project, feed, activeRun: activeRun ?? null }
   })
 
 export const createTask = createServerFn({ method: 'POST' })

@@ -12,9 +12,9 @@ export const Route = createFileRoute('/app/task/$taskId')({
 function TaskDetail() {
   const { taskId } = Route.useParams()
   const { data } = useSuspenseQuery(taskQuery(taskId))
-  const { task, project, feed } = data
+  const { task, project, feed, activeRun } = data
   const queryClient = useQueryClient()
-  const running = task.status === 'in_progress'
+  const running = activeRun != null
 
   // Poll while a sandbox run is active so the feed streams in.
   useEffect(() => {

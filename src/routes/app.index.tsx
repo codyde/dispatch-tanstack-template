@@ -8,5 +8,9 @@ export const Route = createFileRoute('/app/')({
       throw redirect({ to: '/app/$projectId', params: { projectId: projects[0].id } })
     }
   },
-  component: () => <div className="empty" style={{ padding: 28 }}>No projects yet — seed the database.</div>,
+  component: () => (
+    <div className="empty" style={{ padding: 28 }}>
+      No projects yet — create one from the sidebar.
+    </div>
+  ),
 })
