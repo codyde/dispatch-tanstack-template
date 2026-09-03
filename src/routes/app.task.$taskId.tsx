@@ -40,7 +40,7 @@ function TaskDetail() {
 
   const run = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/tasks/${taskId}/run`, { method: 'POST' })
+      const res = await fetch(`/api/v1/tasks/${taskId}/run`, { method: 'POST' })
       if (!res.ok) throw new Error(await res.text())
       return res.json()
     },

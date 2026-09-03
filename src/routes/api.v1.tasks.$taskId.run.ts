@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 
-export const Route = createFileRoute('/api/tasks/$taskId/run')({
+export const Route = createFileRoute('/api/v1/tasks/$taskId/run')({
   server: {
     handlers: {
       POST: async ({ params }) => {
@@ -10,7 +10,8 @@ export const Route = createFileRoute('/api/tasks/$taskId/run')({
           return Response.json({ runId }, { status: 202 })
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
-          return new Response(message, { status: 400 })
+          const status = message.includes('not found') ? 404 : 409
+          return Response.json({ error: message }, { status })
         }
       },
     },

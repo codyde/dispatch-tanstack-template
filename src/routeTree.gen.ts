@@ -13,8 +13,11 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProjectIdRouteImport } from './routes/app.$projectId'
+import { Route as ApiV1ProjectsRouteImport } from './routes/api.v1.projects'
 import { Route as AppTaskTaskIdRouteImport } from './routes/app.task.$taskId'
-import { Route as ApiTasksTaskIdRunRouteImport } from './routes/api.tasks.$taskId.run'
+import { Route as ApiV1TasksTaskIdRouteImport } from './routes/api.v1.tasks.$taskId'
+import { Route as ApiV1ProjectsProjectIdTasksRouteImport } from './routes/api.v1.projects.$projectId.tasks'
+import { Route as ApiV1TasksTaskIdRunRouteImport } from './routes/api.v1.tasks.$taskId.run'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -36,15 +39,31 @@ const AppProjectIdRoute = AppProjectIdRouteImport.update({
   path: '/$projectId',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiV1ProjectsRoute = ApiV1ProjectsRouteImport.update({
+  id: '/api/v1/projects',
+  path: '/api/v1/projects',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppTaskTaskIdRoute = AppTaskTaskIdRouteImport.update({
   id: '/task/$taskId',
   path: '/task/$taskId',
   getParentRoute: () => AppRoute,
 } as any)
-const ApiTasksTaskIdRunRoute = ApiTasksTaskIdRunRouteImport.update({
-  id: '/api/tasks/$taskId/run',
-  path: '/api/tasks/$taskId/run',
+const ApiV1TasksTaskIdRoute = ApiV1TasksTaskIdRouteImport.update({
+  id: '/api/v1/tasks/$taskId',
+  path: '/api/v1/tasks/$taskId',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiV1ProjectsProjectIdTasksRoute =
+  ApiV1ProjectsProjectIdTasksRouteImport.update({
+    id: '/$projectId/tasks',
+    path: '/$projectId/tasks',
+    getParentRoute: () => ApiV1ProjectsRoute,
+  } as any)
+const ApiV1TasksTaskIdRunRoute = ApiV1TasksTaskIdRunRouteImport.update({
+  id: '/run',
+  path: '/run',
+  getParentRoute: () => ApiV1TasksTaskIdRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -52,15 +71,21 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
   '/app/': typeof AppIndexRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
-  '/api/tasks/$taskId/run': typeof ApiTasksTaskIdRunRoute
+  '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
+  '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
+  '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app/$projectId': typeof AppProjectIdRoute
   '/app': typeof AppIndexRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
-  '/api/tasks/$taskId/run': typeof ApiTasksTaskIdRunRoute
+  '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
+  '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
+  '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -68,8 +93,11 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
   '/app/': typeof AppIndexRoute
+  '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
-  '/api/tasks/$taskId/run': typeof ApiTasksTaskIdRunRoute
+  '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
+  '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
+  '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -78,29 +106,39 @@ export interface FileRouteTypes {
     | '/app'
     | '/app/$projectId'
     | '/app/'
+    | '/api/v1/projects'
     | '/app/task/$taskId'
-    | '/api/tasks/$taskId/run'
+    | '/api/v1/tasks/$taskId'
+    | '/api/v1/projects/$projectId/tasks'
+    | '/api/v1/tasks/$taskId/run'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/app/$projectId'
     | '/app'
+    | '/api/v1/projects'
     | '/app/task/$taskId'
-    | '/api/tasks/$taskId/run'
+    | '/api/v1/tasks/$taskId'
+    | '/api/v1/projects/$projectId/tasks'
+    | '/api/v1/tasks/$taskId/run'
   id:
     | '__root__'
     | '/'
     | '/app'
     | '/app/$projectId'
     | '/app/'
+    | '/api/v1/projects'
     | '/app/task/$taskId'
-    | '/api/tasks/$taskId/run'
+    | '/api/v1/tasks/$taskId'
+    | '/api/v1/projects/$projectId/tasks'
+    | '/api/v1/tasks/$taskId/run'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
-  ApiTasksTaskIdRunRoute: typeof ApiTasksTaskIdRunRoute
+  ApiV1ProjectsRoute: typeof ApiV1ProjectsRouteWithChildren
+  ApiV1TasksTaskIdRoute: typeof ApiV1TasksTaskIdRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -133,6 +171,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/v1/projects': {
+      id: '/api/v1/projects'
+      path: '/api/v1/projects'
+      fullPath: '/api/v1/projects'
+      preLoaderRoute: typeof ApiV1ProjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/task/$taskId': {
       id: '/app/task/$taskId'
       path: '/task/$taskId'
@@ -140,12 +185,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTaskTaskIdRouteImport
       parentRoute: typeof AppRoute
     }
-    '/api/tasks/$taskId/run': {
-      id: '/api/tasks/$taskId/run'
-      path: '/api/tasks/$taskId/run'
-      fullPath: '/api/tasks/$taskId/run'
-      preLoaderRoute: typeof ApiTasksTaskIdRunRouteImport
+    '/api/v1/tasks/$taskId': {
+      id: '/api/v1/tasks/$taskId'
+      path: '/api/v1/tasks/$taskId'
+      fullPath: '/api/v1/tasks/$taskId'
+      preLoaderRoute: typeof ApiV1TasksTaskIdRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/v1/projects/$projectId/tasks': {
+      id: '/api/v1/projects/$projectId/tasks'
+      path: '/$projectId/tasks'
+      fullPath: '/api/v1/projects/$projectId/tasks'
+      preLoaderRoute: typeof ApiV1ProjectsProjectIdTasksRouteImport
+      parentRoute: typeof ApiV1ProjectsRoute
+    }
+    '/api/v1/tasks/$taskId/run': {
+      id: '/api/v1/tasks/$taskId/run'
+      path: '/run'
+      fullPath: '/api/v1/tasks/$taskId/run'
+      preLoaderRoute: typeof ApiV1TasksTaskIdRunRouteImport
+      parentRoute: typeof ApiV1TasksTaskIdRoute
     }
   }
 }
@@ -164,10 +223,34 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface ApiV1ProjectsRouteChildren {
+  ApiV1ProjectsProjectIdTasksRoute: typeof ApiV1ProjectsProjectIdTasksRoute
+}
+
+const ApiV1ProjectsRouteChildren: ApiV1ProjectsRouteChildren = {
+  ApiV1ProjectsProjectIdTasksRoute: ApiV1ProjectsProjectIdTasksRoute,
+}
+
+const ApiV1ProjectsRouteWithChildren = ApiV1ProjectsRoute._addFileChildren(
+  ApiV1ProjectsRouteChildren,
+)
+
+interface ApiV1TasksTaskIdRouteChildren {
+  ApiV1TasksTaskIdRunRoute: typeof ApiV1TasksTaskIdRunRoute
+}
+
+const ApiV1TasksTaskIdRouteChildren: ApiV1TasksTaskIdRouteChildren = {
+  ApiV1TasksTaskIdRunRoute: ApiV1TasksTaskIdRunRoute,
+}
+
+const ApiV1TasksTaskIdRouteWithChildren =
+  ApiV1TasksTaskIdRoute._addFileChildren(ApiV1TasksTaskIdRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
-  ApiTasksTaskIdRunRoute: ApiTasksTaskIdRunRoute,
+  ApiV1ProjectsRoute: ApiV1ProjectsRouteWithChildren,
+  ApiV1TasksTaskIdRoute: ApiV1TasksTaskIdRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

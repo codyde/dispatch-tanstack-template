@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { MiniDispatch } from '@/components/MiniDispatch'
 
 export const Route = createFileRoute('/')({
   component: Home,
@@ -53,29 +54,27 @@ function Home() {
       </nav>
 
       <header className="hero">
-        <p className="eyebrow">A Railway template for TanStack</p>
-        <h1>
-          Run TanStack on <em>Railway.</em>
-        </h1>
-        <p className="sub">
-          Dispatch is a work tracker built with <strong>TanStack Start</strong>,{' '}
-          <strong>TanStack AI</strong>, and <strong>Postgres</strong> — with one twist: tasks don't
-          just sit on a board. Click run, and a <strong>Railway sandbox</strong> boots a real VM
-          where an agent executes the work and streams it back into the task.
-        </p>
-        <div className="hero-actions">
-          <Link to="/app" className="btn primary">
-            Open Dispatch →
-          </Link>
-          <a
-            className="btn"
-            href="https://railway.com/new"
-            target="_blank"
-            rel="noreferrer"
-          >
-            Deploy on Railway
-          </a>
+        <div className="hero-copy">
+          <p className="eyebrow">A Railway template for TanStack</p>
+          <h1>
+            Run TanStack on <em>Railway.</em>
+          </h1>
+          <p className="sub">
+            Dispatch is a work tracker built with <strong>TanStack Start</strong>,{' '}
+            <strong>TanStack AI</strong>, and <strong>Postgres</strong> — with one twist: tasks
+            don't just sit on a board. Click run, and a <strong>Railway sandbox</strong> boots a
+            real VM where an agent executes the work and streams it back into the task.
+          </p>
+          <div className="hero-actions">
+            <Link to="/app" className="btn primary">
+              Open Dispatch →
+            </Link>
+            <a className="btn" href="https://railway.com/new" target="_blank" rel="noreferrer">
+              Deploy on Railway
+            </a>
+          </div>
         </div>
+        <MiniDispatch />
       </header>
 
       <section className="section">
@@ -113,6 +112,25 @@ function Home() {
             <div className="t">Sandbox VMs</div>
             <div className="d">TanStack AI agent + tools</div>
           </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>A real API, out of the box</h2>
+        <p className="lede">
+          Everything the UI does goes through server functions backed by the same operations as
+          the public REST API — query it from scripts, agents, or your own tools.
+        </p>
+        <div className="term api-term">
+          <div className="cmd">curl -s $APP_URL/api/v1/projects</div>
+          <div className="out">[{'{'} "id": "…", "name": "Platform", "key": "PLA", … {'}'}]</div>
+          <div className="cmd">
+            curl -s -X POST $APP_URL/api/v1/projects/&lt;id&gt;/tasks -H 'content-type:
+            application/json' -d '{'{'}"title": "Fetch top HN stories"{'}'}'
+          </div>
+          <div className="out">{'{'} "id": "…", "number": 4, "status": "todo", … {'}'}</div>
+          <div className="cmd">curl -s -X POST $APP_URL/api/v1/tasks/&lt;id&gt;/run</div>
+          <div className="out">{'{'} "runId": "…" {'}'} — a sandbox picks the task up</div>
         </div>
       </section>
 
