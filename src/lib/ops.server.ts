@@ -121,6 +121,43 @@ export async function createProjectOp(name: string) {
   return project
 }
 
+export async function updateProjectOp(input: { id: string; name?: string; color?: string }) {
+  const { id, ...patch } = input
+  const [project] = await db.update(projects).set(patch).where(eq(projects.id, id)).returning()
+  if (!project) throw new NotFoundError('project not found')
+  void emitWebhook('project.updated', { project })
+  return project
+}
+
+export async function deleteProjectOp(id: string) {
+  const [project] = await db.delete(projects).where(eq(projects.id, id)).returning()
+  if (!project) throw new NotFoundError('project not found')
+  void emitWebhook('project.deleted', { project })
+  return { ok: true }
+}
+
+export async function listAllTasksOp() {
+  const rows = await db
+    .select({
+      task: tasks,
+      project: { id: projects.id, name: projects.name, key: projects.key, color: projects.color },
+    })
+    .from(tasks)
+    .innerJoin(projects, eq(tasks.projectId, projects.id))
+    .orderBy(desc(tasks.updatedAt))
+  const ids = rows.map((r) => r.task.id)
+  const runningIds =
+    ids.length === 0
+      ? []
+      : (
+          await db
+            .select({ taskId: runs.taskId })
+            .from(runs)
+            .where(and(eq(runs.status, 'running'), inArray(runs.taskId, ids)))
+        ).map((r) => r.taskId)
+  return { rows, runningIds }
+}
+
 export async function listTasksOp(projectId: string) {
   const rows = await db
     .select()
@@ -209,4 +246,23 @@ export async function updateTaskOp(input: {
   }
   void emitWebhook('task.updated', { task, changed: Object.keys(patch) })
   return task
+}
+
+export async function deleteTaskOp(id: string) {
+  const [task] = await db.delete(tasks).where(eq(tasks.id, id)).returning()
+  if (!task) throw new NotFoundError('task not found')
+  void emitWebhook('task.deleted', { task })
+  return { ok: true, projectId: task.projectId }
+}
+
+export async function duplicateTaskOp(id: string) {
+  const [orig] = await db.select().from(tasks).where(eq(tasks.id, id))
+  if (!orig) throw new NotFoundError('task not found')
+  return createTaskOp({
+    projectId: orig.projectId,
+    title: `${orig.title} (copy)`,
+    description: orig.description,
+    priority: orig.priority,
+    status: 'todo',
+  })
 }

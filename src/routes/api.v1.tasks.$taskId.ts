@@ -22,6 +22,15 @@ export const Route = createFileRoute('/api/v1/tasks/$taskId')({
           throw err
         }
       },
+      DELETE: async ({ params }) => {
+        const ops = await import('@/lib/ops.server')
+        try {
+          return Response.json(await ops.deleteTaskOp(params.taskId))
+        } catch (err) {
+          if (err instanceof ops.NotFoundError) return Response.json({ error: err.message }, { status: 404 })
+          throw err
+        }
+      },
       PATCH: async ({ request, params }) => {
         const ops = await import('@/lib/ops.server')
         const body = await request.json().catch(() => null)

@@ -82,6 +82,45 @@ export const saveSettings = createServerFn({ method: 'POST' })
     return ops.saveSettingsOp(data)
   })
 
+export const updateProject = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      id: z.string(),
+      name: z.string().min(1).max(60).optional(),
+      color: z.string().max(20).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.updateProjectOp(data)
+  })
+
+export const deleteProject = createServerFn({ method: 'POST' })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.deleteProjectOp(data.id)
+  })
+
+export const deleteTask = createServerFn({ method: 'POST' })
+  .validator(z.object({ taskId: z.string() }))
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.deleteTaskOp(data.taskId)
+  })
+
+export const duplicateTask = createServerFn({ method: 'POST' })
+  .validator(z.object({ taskId: z.string() }))
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.duplicateTaskOp(data.taskId)
+  })
+
+export const listAllTasks = createServerFn({ method: 'GET' }).handler(async () => {
+  const ops = await import('@/lib/ops.server')
+  return ops.listAllTasksOp()
+})
+
 export const getRunnerStatus = createServerFn({ method: 'GET' }).handler(async () => {
   const ops = await import('@/lib/ops.server')
   return ops.getRunnerStatusOp()
@@ -136,6 +175,11 @@ export const settingsQuery = queryOptions({
 export const webhooksQuery = queryOptions({
   queryKey: ['webhooks'],
   queryFn: () => listWebhooks(),
+})
+
+export const allTasksQuery = queryOptions({
+  queryKey: ['all-tasks'],
+  queryFn: () => listAllTasks(),
 })
 
 export const runnerStatusQuery = queryOptions({

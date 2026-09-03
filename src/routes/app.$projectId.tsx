@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { createTask, projectsQuery, tasksQuery } from '@/lib/tracker'
+import { TaskRowMenu } from '@/components/TaskRowMenu'
 import type { TaskPriority, TaskStatus } from '@/db/schema'
 
 export const Route = createFileRoute('/app/$projectId')({
@@ -104,6 +105,7 @@ function Board() {
                 <span className="prio" data-p={t.priority}>
                   {t.priority}
                 </span>
+                <TaskRowMenu taskId={t.id} projectId={t.projectId} title={t.title} />
               </Link>
             ))}
           </section>

@@ -13,10 +13,12 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProjectIdRouteImport } from './routes/app.$projectId'
+import { Route as AppAllRouteImport } from './routes/app.all'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppWebhooksRouteImport } from './routes/app.webhooks'
 import { Route as ApiV1ProjectsRouteImport } from './routes/api.v1.projects'
 import { Route as AppTaskTaskIdRouteImport } from './routes/app.task.$taskId'
+import { Route as ApiV1ProjectsProjectIdRouteImport } from './routes/api.v1.projects.$projectId'
 import { Route as ApiV1TasksTaskIdRouteImport } from './routes/api.v1.tasks.$taskId'
 import { Route as ApiV1ProjectsProjectIdTasksRouteImport } from './routes/api.v1.projects.$projectId.tasks'
 import { Route as ApiV1TasksTaskIdRunRouteImport } from './routes/api.v1.tasks.$taskId.run'
@@ -41,6 +43,11 @@ const AppProjectIdRoute = AppProjectIdRouteImport.update({
   path: '/$projectId',
   getParentRoute: () => AppRoute,
 } as any)
+const AppAllRoute = AppAllRouteImport.update({
+  id: '/all',
+  path: '/all',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -61,6 +68,11 @@ const AppTaskTaskIdRoute = AppTaskTaskIdRouteImport.update({
   path: '/task/$taskId',
   getParentRoute: () => AppRoute,
 } as any)
+const ApiV1ProjectsProjectIdRoute = ApiV1ProjectsProjectIdRouteImport.update({
+  id: '/$projectId',
+  path: '/$projectId',
+  getParentRoute: () => ApiV1ProjectsRoute,
+} as any)
 const ApiV1TasksTaskIdRoute = ApiV1TasksTaskIdRouteImport.update({
   id: '/api/v1/tasks/$taskId',
   path: '/api/v1/tasks/$taskId',
@@ -68,9 +80,9 @@ const ApiV1TasksTaskIdRoute = ApiV1TasksTaskIdRouteImport.update({
 } as any)
 const ApiV1ProjectsProjectIdTasksRoute =
   ApiV1ProjectsProjectIdTasksRouteImport.update({
-    id: '/$projectId/tasks',
-    path: '/$projectId/tasks',
-    getParentRoute: () => ApiV1ProjectsRoute,
+    id: '/tasks',
+    path: '/tasks',
+    getParentRoute: () => ApiV1ProjectsProjectIdRoute,
   } as any)
 const ApiV1TasksTaskIdRunRoute = ApiV1TasksTaskIdRunRouteImport.update({
   id: '/run',
@@ -82,11 +94,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/app/': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
+  '/api/v1/projects/$projectId': typeof ApiV1ProjectsProjectIdRouteWithChildren
   '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
   '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
   '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
@@ -94,11 +108,13 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/app': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
+  '/api/v1/projects/$projectId': typeof ApiV1ProjectsProjectIdRouteWithChildren
   '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
   '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
   '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
@@ -108,11 +124,13 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
   '/app/webhooks': typeof AppWebhooksRoute
   '/app/': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
+  '/api/v1/projects/$projectId': typeof ApiV1ProjectsProjectIdRouteWithChildren
   '/api/v1/tasks/$taskId': typeof ApiV1TasksTaskIdRouteWithChildren
   '/api/v1/projects/$projectId/tasks': typeof ApiV1ProjectsProjectIdTasksRoute
   '/api/v1/tasks/$taskId/run': typeof ApiV1TasksTaskIdRunRoute
@@ -123,11 +141,13 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/app/$projectId'
+    | '/app/all'
     | '/app/settings'
     | '/app/webhooks'
     | '/app/'
     | '/api/v1/projects'
     | '/app/task/$taskId'
+    | '/api/v1/projects/$projectId'
     | '/api/v1/tasks/$taskId'
     | '/api/v1/projects/$projectId/tasks'
     | '/api/v1/tasks/$taskId/run'
@@ -135,11 +155,13 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app/$projectId'
+    | '/app/all'
     | '/app/settings'
     | '/app/webhooks'
     | '/app'
     | '/api/v1/projects'
     | '/app/task/$taskId'
+    | '/api/v1/projects/$projectId'
     | '/api/v1/tasks/$taskId'
     | '/api/v1/projects/$projectId/tasks'
     | '/api/v1/tasks/$taskId/run'
@@ -148,11 +170,13 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/app/$projectId'
+    | '/app/all'
     | '/app/settings'
     | '/app/webhooks'
     | '/app/'
     | '/api/v1/projects'
     | '/app/task/$taskId'
+    | '/api/v1/projects/$projectId'
     | '/api/v1/tasks/$taskId'
     | '/api/v1/projects/$projectId/tasks'
     | '/api/v1/tasks/$taskId/run'
@@ -195,6 +219,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/all': {
+      id: '/app/all'
+      path: '/all'
+      fullPath: '/app/all'
+      preLoaderRoute: typeof AppAllRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/settings': {
       id: '/app/settings'
       path: '/settings'
@@ -223,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppTaskTaskIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/api/v1/projects/$projectId': {
+      id: '/api/v1/projects/$projectId'
+      path: '/$projectId'
+      fullPath: '/api/v1/projects/$projectId'
+      preLoaderRoute: typeof ApiV1ProjectsProjectIdRouteImport
+      parentRoute: typeof ApiV1ProjectsRoute
+    }
     '/api/v1/tasks/$taskId': {
       id: '/api/v1/tasks/$taskId'
       path: '/api/v1/tasks/$taskId'
@@ -232,10 +270,10 @@ declare module '@tanstack/react-router' {
     }
     '/api/v1/projects/$projectId/tasks': {
       id: '/api/v1/projects/$projectId/tasks'
-      path: '/$projectId/tasks'
+      path: '/tasks'
       fullPath: '/api/v1/projects/$projectId/tasks'
       preLoaderRoute: typeof ApiV1ProjectsProjectIdTasksRouteImport
-      parentRoute: typeof ApiV1ProjectsRoute
+      parentRoute: typeof ApiV1ProjectsProjectIdRoute
     }
     '/api/v1/tasks/$taskId/run': {
       id: '/api/v1/tasks/$taskId/run'
@@ -249,6 +287,7 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppProjectIdRoute: typeof AppProjectIdRoute
+  AppAllRoute: typeof AppAllRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
@@ -257,6 +296,7 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppProjectIdRoute: AppProjectIdRoute,
+  AppAllRoute: AppAllRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
@@ -265,12 +305,26 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
-interface ApiV1ProjectsRouteChildren {
+interface ApiV1ProjectsProjectIdRouteChildren {
   ApiV1ProjectsProjectIdTasksRoute: typeof ApiV1ProjectsProjectIdTasksRoute
 }
 
+const ApiV1ProjectsProjectIdRouteChildren: ApiV1ProjectsProjectIdRouteChildren =
+  {
+    ApiV1ProjectsProjectIdTasksRoute: ApiV1ProjectsProjectIdTasksRoute,
+  }
+
+const ApiV1ProjectsProjectIdRouteWithChildren =
+  ApiV1ProjectsProjectIdRoute._addFileChildren(
+    ApiV1ProjectsProjectIdRouteChildren,
+  )
+
+interface ApiV1ProjectsRouteChildren {
+  ApiV1ProjectsProjectIdRoute: typeof ApiV1ProjectsProjectIdRouteWithChildren
+}
+
 const ApiV1ProjectsRouteChildren: ApiV1ProjectsRouteChildren = {
-  ApiV1ProjectsProjectIdTasksRoute: ApiV1ProjectsProjectIdTasksRoute,
+  ApiV1ProjectsProjectIdRoute: ApiV1ProjectsProjectIdRouteWithChildren,
 }
 
 const ApiV1ProjectsRouteWithChildren = ApiV1ProjectsRoute._addFileChildren(

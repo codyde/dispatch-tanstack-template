@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Link, Outlet, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { createProject, projectsQuery } from '@/lib/tracker'
+import { createProject, deleteProject, projectsQuery, updateProject } from '@/lib/tracker'
+import { Menu } from '@/components/Menu'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 export const Route = createFileRoute('/app')({
   loader: ({ context }) => context.queryClient.ensureQueryData(projectsQuery),
@@ -10,6 +12,29 @@ export const Route = createFileRoute('/app')({
 
 function AppShell() {
   const { data: projects } = useSuspenseQuery(projectsQuery)
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
+  const [deleting, setDeleting] = useState<{ id: string; name: string } | null>(null)
+
+  const rename = useMutation({
+    mutationFn: (input: { id: string; name: string }) => updateProject({ data: input }),
+    onSuccess: () => {
+      setRenamingId(null)
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+    },
+  })
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteProject({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+      navigate({ to: '/app/all' })
+    },
+  })
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -18,19 +43,61 @@ function AppShell() {
           Dispatch
         </Link>
         <span className="label">Projects</span>
-        {projects.map((p) => (
-          <Link
-            key={p.id}
-            to="/app/$projectId"
-            params={{ projectId: p.id }}
-            className="proj-link"
-            activeProps={{ 'data-status': 'active' } as never}
-          >
-            <span className="swatch" style={{ background: p.color }} />
-            {p.name}
-            <span className="key">{p.key}</span>
-          </Link>
-        ))}
+        <Link to="/app/all" className="proj-link" activeProps={{ 'data-status': 'active' } as never}>
+          <GridIcon />
+          All Projects
+        </Link>
+        {projects.map((p) =>
+          renamingId === p.id ? (
+            <form
+              key={p.id}
+              className="new-proj"
+              onSubmit={(e) => {
+                e.preventDefault()
+                if (renameValue.trim()) rename.mutate({ id: p.id, name: renameValue.trim() })
+              }}
+            >
+              <input
+                autoFocus
+                type="text"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                onKeyDown={(e) => e.key === 'Escape' && setRenamingId(null)}
+                onBlur={() => setRenamingId(null)}
+              />
+            </form>
+          ) : (
+            <div className="proj-row" key={p.id}>
+              <Link
+                to="/app/$projectId"
+                params={{ projectId: p.id }}
+                className="proj-link"
+                activeProps={{ 'data-status': 'active' } as never}
+              >
+                <span className="swatch" style={{ background: p.color }} />
+                {p.name}
+                <span className="key">{p.key}</span>
+              </Link>
+              <Menu
+                label={`Actions for ${p.name}`}
+                items={[
+                  {
+                    label: 'Rename…',
+                    onSelect: () => {
+                      setRenameValue(p.name)
+                      setRenamingId(p.id)
+                    },
+                  },
+                  {
+                    label: 'Delete project',
+                    danger: true,
+                    onSelect: () => setDeleting({ id: p.id, name: p.name }),
+                  },
+                ]}
+              />
+            </div>
+          ),
+        )}
         <NewProject />
         <span className="label" style={{ marginTop: 14 }}>
           Workspace
@@ -49,7 +116,29 @@ function AppShell() {
       <main className="main">
         <Outlet />
       </main>
+      <ConfirmDialog
+        open={deleting != null}
+        title={`Delete "${deleting?.name}"?`}
+        body="This permanently removes the project and every task in it."
+        confirmLabel="Delete project"
+        onCancel={() => setDeleting(null)}
+        onConfirm={() => {
+          if (deleting) remove.mutate(deleting.id)
+          setDeleting(null)
+        }}
+      />
     </div>
+  )
+}
+
+function GridIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="3" y="3" width="7" height="7" rx="1.5" />
+      <rect x="14" y="3" width="7" height="7" rx="1.5" />
+      <rect x="3" y="14" width="7" height="7" rx="1.5" />
+      <rect x="14" y="14" width="7" height="7" rx="1.5" />
+    </svg>
   )
 }
 

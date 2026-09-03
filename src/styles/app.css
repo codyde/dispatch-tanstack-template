@@ -721,6 +721,112 @@ select:focus-visible {
   margin-left: auto;
 }
 
+.proj-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.proj-row .proj-link {
+  flex: 1;
+  min-width: 0;
+}
+
+.proj-row .menu {
+  opacity: 0;
+}
+
+.proj-row:hover .menu,
+.proj-row .menu:focus-within {
+  opacity: 1;
+}
+
+/* ————— kebab menus ————— */
+
+.menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  color: var(--faint);
+  transition: background 120ms var(--ease), color 120ms var(--ease);
+}
+
+.menu-btn:hover {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+.menu-list {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 30;
+  min-width: 160px;
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  box-shadow: 0 12px 32px -12px rgba(34, 31, 26, 0.35);
+  padding: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item {
+  text-align: left;
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--ink);
+  transition: background 100ms var(--ease);
+}
+
+.menu-item:hover {
+  background: var(--surface-2);
+}
+
+.menu-item[data-danger] {
+  color: var(--accent);
+}
+
+.task-row .menu {
+  opacity: 0;
+}
+
+.task-row:hover .menu,
+.task-row .menu:focus-within {
+  opacity: 1;
+}
+
+.proj-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  padding: 1px 6px;
+  flex-shrink: 0;
+}
+
+.rename-form {
+  flex: 1;
+}
+
+.rename-form input {
+  width: 100%;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  padding: 4px 10px;
+}
+
 .new-proj-btn {
   display: flex;
   align-items: center;
@@ -1271,6 +1377,73 @@ select:focus-visible {
 .btn.danger {
   color: var(--accent);
   border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+/* ————— confirm dialogs ————— */
+
+.dlg-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(24, 21, 17, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dlg {
+  background: var(--surface);
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px -20px rgba(24, 21, 17, 0.5);
+  padding: 22px 24px;
+  max-width: 440px;
+  width: 100%;
+}
+
+@supports (transition-behavior: allow-discrete) {
+  .dlg {
+    transition: opacity 200ms var(--ease), transform 200ms var(--ease);
+  }
+  @starting-style {
+    .dlg {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+}
+
+.dlg h3 {
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+}
+
+.dlg p {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 0 0 18px;
+}
+
+.dlg-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.btn.danger-solid {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff8f4;
+}
+
+.btn.danger-solid:hover {
+  background: var(--accent-soft);
+  border-color: var(--accent-soft);
 }
 
 .running-line {

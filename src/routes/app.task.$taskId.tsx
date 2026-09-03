@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { taskQuery, updateTask } from '@/lib/tracker'
+import { deleteTask, duplicateTask, taskQuery, updateTask } from '@/lib/tracker'
+import { Menu } from '@/components/Menu'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import type { TaskPriority, TaskStatus } from '@/db/schema'
 
 export const Route = createFileRoute('/app/task/$taskId')({
@@ -30,7 +32,7 @@ function TaskDetail() {
   useEffect(() => setDesc(task.description), [task.id, task.description])
 
   const patch = useMutation({
-    mutationFn: (data: Partial<{ status: TaskStatus; priority: TaskPriority; description: string }>) =>
+    mutationFn: (data: Partial<{ status: TaskStatus; priority: TaskPriority; description: string; title: string }>) =>
       updateTask({ data: { taskId, ...data } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['task', taskId] })
@@ -47,6 +49,28 @@ function TaskDetail() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['task', taskId] }),
   })
 
+  const navigate = useNavigate()
+  const [renaming, setRenaming] = useState(false)
+  const [renameValue, setRenameValue] = useState(task.title)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+
+  const duplicate = useMutation({
+    mutationFn: () => duplicateTask({ data: { taskId } }),
+    onSuccess: (copy) => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+      navigate({ to: '/app/task/$taskId', params: { taskId: copy.id } })
+    },
+  })
+  const remove = useMutation({
+    mutationFn: () => deleteTask({ data: { taskId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] })
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+      navigate({ to: '/app/$projectId', params: { projectId: task.projectId } })
+    },
+  })
+
   return (
     <div className="task-page">
       <Link to="/app/$projectId" params={{ projectId: task.projectId }} className="back">
@@ -54,7 +78,29 @@ function TaskDetail() {
       </Link>
 
       <div className="task-head">
-        <h1>{task.title}</h1>
+        {renaming ? (
+          <form
+            className="rename-form"
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (renameValue.trim()) {
+                patch.mutate({ title: renameValue.trim() } as never)
+                setRenaming(false)
+              }
+            }}
+          >
+            <input
+              autoFocus
+              type="text"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Escape' && setRenaming(false)}
+              onBlur={() => setRenaming(false)}
+            />
+          </form>
+        ) : (
+          <h1>{task.title}</h1>
+        )}
         <button
           className="btn primary"
           onClick={() => run.mutate()}
@@ -62,6 +108,41 @@ function TaskDetail() {
         >
           {running ? 'Sandbox running…' : 'Run in Agent Sandbox'}
         </button>
+        <Menu
+          label="Task actions"
+          items={[
+            {
+              label: 'Rename…',
+              onSelect: () => {
+                setRenameValue(task.title)
+                setRenaming(true)
+              },
+            },
+            { label: 'Duplicate', onSelect: () => duplicate.mutate() },
+            {
+              label: 'Copy link',
+              onSelect: () => {
+                void navigator.clipboard?.writeText(window.location.href)
+              },
+            },
+            {
+              label: 'Delete task',
+              danger: true,
+              onSelect: () => setConfirmingDelete(true),
+            },
+          ]}
+        />
+        <ConfirmDialog
+          open={confirmingDelete}
+          title={`Delete "${task.title}"?`}
+          body="This permanently removes the task, its runs, and its activity history."
+          confirmLabel="Delete task"
+          onCancel={() => setConfirmingDelete(false)}
+          onConfirm={() => {
+            setConfirmingDelete(false)
+            remove.mutate()
+          }}
+        />
       </div>
 
       <div className="task-meta">
