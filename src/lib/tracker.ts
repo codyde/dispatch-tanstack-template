@@ -82,6 +82,11 @@ export const saveSettings = createServerFn({ method: 'POST' })
     return ops.saveSettingsOp(data)
   })
 
+export const getRunnerStatus = createServerFn({ method: 'GET' }).handler(async () => {
+  const ops = await import('@/lib/ops.server')
+  return ops.getRunnerStatusOp()
+})
+
 // ————— webhooks —————
 
 export const listWebhooks = createServerFn({ method: 'GET' }).handler(async () => {
@@ -131,6 +136,12 @@ export const settingsQuery = queryOptions({
 export const webhooksQuery = queryOptions({
   queryKey: ['webhooks'],
   queryFn: () => listWebhooks(),
+})
+
+export const runnerStatusQuery = queryOptions({
+  queryKey: ['runner-status'],
+  queryFn: () => getRunnerStatus(),
+  staleTime: 30_000,
 })
 
 export const projectsQuery = queryOptions({

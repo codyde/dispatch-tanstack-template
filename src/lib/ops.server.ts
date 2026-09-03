@@ -85,6 +85,22 @@ export async function getSecretOp(key: SettingKey): Promise<string | null> {
   return row?.value ?? null
 }
 
+/** Whether task runs can actually execute: an LLM credential and a Railway token. */
+export async function getRunnerStatusOp() {
+  const [userAi, userRw] = await Promise.all([
+    getSecretOp('anthropic_api_key'),
+    getSecretOp('railway_api_token'),
+  ])
+  return {
+    aiReady: !!(
+      userAi ||
+      (process.env.AI_BASE_URL && process.env.AI_API_KEY) ||
+      process.env.ANTHROPIC_API_KEY
+    ),
+    railwayReady: !!(process.env.RAILWAY_API_TOKEN || userRw),
+  }
+}
+
 export async function listProjectsOp() {
   return db.select().from(projects).orderBy(projects.createdAt)
 }

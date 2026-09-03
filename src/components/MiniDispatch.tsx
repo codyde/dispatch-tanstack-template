@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from '@tanstack/react-router'
 
 type MiniTask = {
   id: number
@@ -47,9 +48,12 @@ const FALLBACK_SCRIPT = [
   'SUMMARY: task executed in the sandbox',
 ]
 
-export function MiniDispatch() {
+export function MiniDispatch({ aiReady, railwayReady }: { aiReady: boolean; railwayReady: boolean }) {
+  const ready = aiReady && railwayReady
+  const [view, setView] = useState<'board' | 'run'>('board')
   const [tasks, setTasks] = useState<MiniTask[]>(SAMPLE)
   const [title, setTitle] = useState('')
+  const [activeTask, setActiveTask] = useState<MiniTask | null>(null)
   const [runningId, setRunningId] = useState<number | null>(null)
   const [lines, setLines] = useState<string[]>([])
   const timer = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -69,20 +73,22 @@ export function MiniDispatch() {
   }
 
   const run = (task: MiniTask) => {
-    if (runningId != null) return
+    setActiveTask(task)
+    setView('run')
+    if (!ready || runningId != null) return
     const script = RUN_SCRIPT[task.id] ?? FALLBACK_SCRIPT
     setRunningId(task.id)
-    setLines([`▸ sandbox started for ${keyOf(task)}`])
+    const header = `▸ sandbox started for ${keyOf(task)}`
+    setLines([header])
     setTasks((ts) => ts.map((t) => (t.id === task.id ? { ...t, status: 'in_progress' } : t)))
     const reduced =
       typeof window !== 'undefined' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches
     if (reduced) {
-      setLines((l) => [...l, ...script])
+      setLines([header, ...script])
       finish(task.id)
       return
     }
-    const header = `▸ sandbox started for ${keyOf(task)}`
     let n = 0
     timer.current = setInterval(() => {
       n += 1
@@ -111,71 +117,114 @@ export function MiniDispatch() {
     setTitle('')
   }
 
+  const missing = [
+    !aiReady && 'an Anthropic API key',
+    !railwayReady && 'a Railway token',
+  ].filter(Boolean) as string[]
+
   return (
     <div className="mini" aria-label="Interactive preview of Dispatch with sample data">
-      <div className="mini-bar">
-        <span className="mini-title">
-          <span className="swatch" style={{ background: 'var(--accent)' }} />
-          Dispatch — live preview
-        </span>
-        <span className="mini-hint">sample data · click a dot · run a task</span>
-      </div>
-      <form
-        className="mini-add"
-        onSubmit={(e) => {
-          e.preventDefault()
-          addTask()
-        }}
-      >
-        <input
-          type="text"
-          placeholder="Add a task…"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          aria-label="Add a preview task"
-        />
-      </form>
-      <div className="mini-rows">
-        {tasks.map((t) => (
-          <div className="mini-row" key={t.id}>
-            <button
-              className="mini-dot-btn"
-              title="Click to cycle status"
-              onClick={() => cycleStatus(t.id)}
-            >
-              <span className="status-dot" data-st={t.status} />
+      <div className="mini-views" data-view={view}>
+        {/* board view */}
+        <div className="mini-view">
+          <div className="mini-bar">
+            <span className="mini-title">
+              <span className="swatch" style={{ background: 'var(--accent)' }} />
+              Dispatch — live preview
+            </span>
+            <span className="mini-hint">sample data · click a dot · run a task</span>
+          </div>
+          <form
+            className="mini-add"
+            onSubmit={(e) => {
+              e.preventDefault()
+              addTask()
+            }}
+          >
+            <input
+              type="text"
+              placeholder="Add a task…"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              aria-label="Add a preview task"
+            />
+          </form>
+          <div className="mini-rows">
+            {tasks.map((t) => (
+              <div className="mini-row" key={t.id}>
+                <button
+                  className="mini-dot-btn"
+                  title="Click to cycle status"
+                  onClick={() => cycleStatus(t.id)}
+                >
+                  <span className="status-dot" data-st={t.status} />
+                </button>
+                <span className="mini-id">{keyOf(t)}</span>
+                <span className="mini-t">{t.title}</span>
+                {runningId === t.id ? (
+                  <span className="chip-running">
+                    <span className="pulse" /> running
+                  </span>
+                ) : (
+                  t.status !== 'done' && (
+                    <button className="mini-run" onClick={() => run(t)} disabled={runningId != null}>
+                      run
+                    </button>
+                  )
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* run view */}
+        <div className="mini-view">
+          <div className="mini-bar">
+            <button className="mini-back" onClick={() => setView('board')}>
+              ← Back
             </button>
-            <span className="mini-id">{keyOf(t)}</span>
-            <span className="mini-t">{t.title}</span>
-            {runningId === t.id ? (
+            {activeTask && (
+              <span className="mini-run-label">
+                <span className="mini-id">{keyOf(activeTask)}</span>
+                <span className="mini-t">{activeTask.title}</span>
+              </span>
+            )}
+            {runningId != null && (
               <span className="chip-running">
                 <span className="pulse" /> running
               </span>
-            ) : (
-              t.status !== 'done' && (
-                <button className="mini-run" onClick={() => run(t)} disabled={runningId != null}>
-                  run
-                </button>
-              )
             )}
           </div>
-        ))}
-      </div>
-      {lines.length > 0 && (
-        <div className="term mini-term">
-          {lines.map((l, i) =>
-            l?.startsWith('$') ? (
-              <div className="cmd" key={i}>
-                {l.slice(2)}
-              </div>
-            ) : (
-              <div className="out" key={i}>
-                {l}
-              </div>
-            ),
+          {!ready ? (
+            <div className="mini-gate">
+              <p>
+                Before agents can run tasks, Dispatch needs {missing.join(' and ')} — sandboxes
+                boot with your Railway token and the agent talks to the model with your key.
+              </p>
+              <Link to="/app/settings" className="btn primary">
+                Add keys in Settings
+              </Link>
+            </div>
+          ) : (
+            <div className="term mini-term">
+              {lines.map((l, i) =>
+                l?.startsWith('$') ? (
+                  <div className="cmd" key={i}>
+                    {l.slice(2)}
+                  </div>
+                ) : (
+                  <div className="out" key={i}>
+                    {l}
+                  </div>
+                ),
+              )}
+              {runningId == null && lines.length > 0 && (
+                <div className="out mini-done">task moved to In Review ✓</div>
+              )}
+            </div>
           )}
         </div>
-      )}
+      </div>
     </div>
   )
 }

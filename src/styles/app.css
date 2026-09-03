@@ -227,7 +227,13 @@ select:focus-visible {
   display: grid;
   grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
   gap: 48px;
-  align-items: center;
+  align-items: stretch;
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 @media (max-width: 940px) {
@@ -293,10 +299,82 @@ select:focus-visible {
   border-radius: var(--radius-lg);
   padding: 14px;
   box-shadow: 0 18px 40px -28px rgba(34, 31, 26, 0.45);
+  min-width: 0;
+  /* Fixed frame: fills the hero column; content scrolls inside, never grows
+     the panel. Padding lives on each view so the slide clips cleanly at the
+     panel edge. */
+  padding: 0;
+  min-height: 420px;
+  max-height: 520px;
+  overflow: hidden;
+  display: flex;
+}
+
+.mini-views {
+  display: flex;
+  width: 200%;
+  flex: 1;
+  transition: transform 340ms var(--ease);
+}
+
+.mini-views[data-view='run'] {
+  transform: translateX(-50%);
+}
+
+.mini-view {
+  width: 50%;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 14px;
+}
+
+.mini-back {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 3px 12px;
+  flex-shrink: 0;
+  transition: color 120ms var(--ease), border-color 120ms var(--ease);
+}
+
+.mini-back:hover {
+  color: var(--ink);
+  border-color: var(--line-strong);
+}
+
+.mini-run-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   min-width: 0;
+  flex: 1;
+  font-size: 12.5px;
+}
+
+.mini-gate {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 10px;
+}
+
+.mini-gate p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 13px;
+  max-width: 40ch;
+}
+
+.mini-done {
+  color: #8fae92;
+  margin-top: 6px;
 }
 
 .mini-bar {
@@ -337,6 +415,9 @@ select:focus-visible {
 .mini-rows {
   display: flex;
   flex-direction: column;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .mini-row {
@@ -397,9 +478,10 @@ select:focus-visible {
 }
 
 .mini-term {
-  max-height: 150px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  font-size: 11px;
+  font-size: 11.5px;
   margin: 0;
 }
 
