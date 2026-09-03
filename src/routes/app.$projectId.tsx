@@ -44,7 +44,10 @@ function Board() {
     <div>
       <div className="board-head">
         <h1>
-          {project.name} <span className="count">{tasks.length} tasks</span>
+          {project.name}{' '}
+          <span className="count">
+            {tasks.length} {tasks.length === 1 ? 'task' : 'tasks'}
+          </span>
         </h1>
       </div>
 
