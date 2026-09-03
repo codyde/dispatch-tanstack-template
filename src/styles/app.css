@@ -312,8 +312,8 @@ select:focus-visible {
 
 .mini-views {
   display: flex;
+  flex: 0 0 200%;
   width: 200%;
-  flex: 1;
   transition: transform 340ms var(--ease);
 }
 
