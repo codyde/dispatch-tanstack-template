@@ -61,7 +61,77 @@ export const updateTask = createServerFn({ method: 'POST' })
     return ops.updateTaskOp(data)
   })
 
+// ————— settings —————
+
+export const getSettings = createServerFn({ method: 'GET' }).handler(async () => {
+  const ops = await import('@/lib/ops.server')
+  return ops.getSettingsOp()
+})
+
+export const saveSettings = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      anthropic_api_key: z.string().max(500).optional(),
+      openai_api_key: z.string().max(500).optional(),
+      grok_api_key: z.string().max(500).optional(),
+      railway_api_token: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.saveSettingsOp(data)
+  })
+
+// ————— webhooks —————
+
+export const listWebhooks = createServerFn({ method: 'GET' }).handler(async () => {
+  const ops = await import('@/lib/ops.server')
+  return ops.listWebhooksOp()
+})
+
+export const createWebhook = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      url: z.string().url().max(2000),
+      topics: z.array(z.string()).min(1),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.createWebhookOp(data)
+  })
+
+export const updateWebhook = createServerFn({ method: 'POST' })
+  .validator(
+    z.object({
+      id: z.string(),
+      enabled: z.boolean().optional(),
+      topics: z.array(z.string()).optional(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.updateWebhookOp(data)
+  })
+
+export const deleteWebhook = createServerFn({ method: 'POST' })
+  .validator(z.object({ id: z.string() }))
+  .handler(async ({ data }) => {
+    const ops = await import('@/lib/ops.server')
+    return ops.deleteWebhookOp(data.id)
+  })
+
 // ————— query options —————
+
+export const settingsQuery = queryOptions({
+  queryKey: ['settings'],
+  queryFn: () => getSettings(),
+})
+
+export const webhooksQuery = queryOptions({
+  queryKey: ['webhooks'],
+  queryFn: () => listWebhooks(),
+})
 
 export const projectsQuery = queryOptions({
   queryKey: ['projects'],

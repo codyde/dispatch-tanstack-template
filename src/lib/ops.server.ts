@@ -2,10 +2,88 @@
 // createServerFn wrappers (src/lib/tracker.ts) and the public REST API
 // (src/routes/api.v1.*). Import only via dynamic import from handlers.
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
-import { activities, db, projects, runs, tasks } from '@/db'
+import { activities, appSettings, db, projects, runs, tasks, webhooks } from '@/db'
 import type { TaskPriority, TaskStatus } from '@/db/schema'
+import type { SettingKey, WebhookTopic } from '@/lib/topics'
+import { SETTING_KEYS } from '@/lib/topics'
 
 export class NotFoundError extends Error {}
+
+// ————— webhooks —————
+
+export async function emitWebhook(topic: WebhookTopic, data: Record<string, unknown>) {
+  try {
+    const hooks = await db.select().from(webhooks).where(eq(webhooks.enabled, true))
+    const body = JSON.stringify({ topic, timestamp: new Date().toISOString(), data })
+    for (const hook of hooks) {
+      if (!hook.topics.includes(topic)) continue
+      void fetch(hook.url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-dispatch-topic': topic },
+        body,
+        signal: AbortSignal.timeout(5000),
+      }).catch(() => {})
+    }
+  } catch {
+    // webhook delivery must never break the operation that triggered it
+  }
+}
+
+export async function listWebhooksOp() {
+  return db.select().from(webhooks).orderBy(webhooks.createdAt)
+}
+
+export async function createWebhookOp(input: { url: string; topics: string[] }) {
+  const [hook] = await db.insert(webhooks).values(input).returning()
+  return hook
+}
+
+export async function updateWebhookOp(input: { id: string; enabled?: boolean; topics?: string[] }) {
+  const { id, ...patch } = input
+  const [hook] = await db.update(webhooks).set(patch).where(eq(webhooks.id, id)).returning()
+  if (!hook) throw new NotFoundError('webhook not found')
+  return hook
+}
+
+export async function deleteWebhookOp(id: string) {
+  await db.delete(webhooks).where(eq(webhooks.id, id))
+  return { ok: true }
+}
+
+// ————— settings —————
+
+const VALID_SETTINGS = new Set<string>(SETTING_KEYS.map((s) => s.id))
+
+export async function getSettingsOp() {
+  const rows = await db.select().from(appSettings)
+  const byKey = new Map(rows.map((r) => [r.key, r.value]))
+  return SETTING_KEYS.map((s) => {
+    const v = byKey.get(s.id)
+    return { key: s.id, set: !!v, last4: v ? v.slice(-4) : null }
+  })
+}
+
+export async function saveSettingsOp(patch: Partial<Record<SettingKey, string>>) {
+  for (const [key, raw] of Object.entries(patch)) {
+    if (!VALID_SETTINGS.has(key) || raw == null) continue
+    const value = raw.trim()
+    if (!value) {
+      await db.delete(appSettings).where(eq(appSettings.key, key))
+    } else {
+      await db
+        .insert(appSettings)
+        .values({ key, value, updatedAt: new Date() })
+        .onConflictDoUpdate({ target: appSettings.key, set: { value, updatedAt: new Date() } })
+    }
+  }
+  return getSettingsOp()
+}
+
+/** Server-internal: read a raw secret value. Never expose through an endpoint. */
+export async function getSecretOp(key: SettingKey): Promise<string | null> {
+  const [row] = await db.select().from(appSettings).where(eq(appSettings.key, key))
+  return row?.value ?? null
+}
 
 export async function listProjectsOp() {
   return db.select().from(projects).orderBy(projects.createdAt)
@@ -23,6 +101,7 @@ export async function createProjectOp(name: string) {
     .insert(projects)
     .values({ name, key, color: palette[existing.length % palette.length] })
     .returning()
+  void emitWebhook('project.created', { project })
   return project
 }
 
@@ -85,6 +164,7 @@ export async function createTaskOp(input: {
       status: input.status ?? 'todo',
     })
     .returning()
+  void emitWebhook('task.created', { task })
   return task
 }
 
@@ -109,6 +189,8 @@ export async function updateTaskOp(input: {
       kind: 'status_change',
       payload: { from: before.status, to: patch.status },
     })
+    void emitWebhook('task.status_changed', { task, from: before.status, to: patch.status })
   }
+  void emitWebhook('task.updated', { task, changed: Object.keys(patch) })
   return task
 }

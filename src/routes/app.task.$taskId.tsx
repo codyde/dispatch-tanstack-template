@@ -148,6 +148,22 @@ function FeedItem({ a }: { a: { id: string; kind: string; payload: Record<string
           {p.output != null && <div className="out">{p.output}</div>}
         </div>
       )}
+      {a.kind === 'tool_result' && (
+        <div className="term">
+          {p.output ? <div className="out">{p.output}</div> : null}
+          {(p as Record<string, unknown>).running === true ? (
+            <div className="out running-line">
+              <span className="pulse-inline" /> running…
+            </div>
+          ) : (
+            (p as Record<string, unknown>).exitCode !== undefined && (
+              <div className="exit-line" data-fail={(p as Record<string, unknown>).exitCode !== 0 || undefined}>
+                exit {String((p as Record<string, unknown>).exitCode)}
+              </div>
+            )
+          )}
+        </div>
+      )}
     </div>
   )
 }

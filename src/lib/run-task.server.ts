@@ -11,13 +11,18 @@ import { activities, db, runs, tasks } from '@/db'
 
 const activeRuns = new Map<string, AbortController>()
 
-function makeAdapter() {
-  // On a Railway agent/dev-studio VM the LLM relay is ambient: AI_BASE_URL +
-  // AI_API_KEY, authenticated with `Authorization: Bearer` (not x-api-key).
-  // Off-VM deploys of this template use a plain ANTHROPIC_API_KEY instead.
+async function makeAdapter() {
+  // Key precedence: user-saved Anthropic key (Settings) → the ambient LLM
+  // relay on Railway agent/dev-studio VMs (AI_BASE_URL + AI_API_KEY, Bearer
+  // auth — x-api-key is rejected) → a plain ANTHROPIC_API_KEY.
+  const model = (process.env.DISPATCH_MODEL ?? 'claude-sonnet-5') as never
+  const { getSecretOp } = await import('@/lib/ops.server')
+  const userKey = await getSecretOp('anthropic_api_key')
+  if (userKey) {
+    return { adapter: createAnthropicChat(model, userKey), model }
+  }
   const relayUrl = process.env.AI_BASE_URL
   const relayKey = process.env.AI_API_KEY
-  const model = (process.env.DISPATCH_MODEL ?? 'claude-sonnet-5') as never
   if (relayUrl && relayKey) {
     const client = new Anthropic({ apiKey: null, authToken: relayKey, baseURL: relayUrl })
     return { adapter: createAnthropicChatWithClient(model, client as never), model }
@@ -26,8 +31,14 @@ function makeAdapter() {
 }
 
 async function log(taskId: string, runId: string | null, kind: string, payload: Record<string, unknown>) {
-  await db.insert(activities).values({ taskId, runId, kind: kind as never, payload })
+  const [row] = await db
+    .insert(activities)
+    .values({ taskId, runId, kind: kind as never, payload })
+    .returning()
+  return row
 }
+
+const trim = (s: string, max = 8000) => (s.length > max ? s.slice(0, max) + '\n…(truncated)' : s)
 
 export async function startRun(taskId: string): Promise<{ runId: string }> {
   const [task] = await db.select().from(tasks).where(eq(tasks.id, taskId))
@@ -60,12 +71,18 @@ async function executeRun(taskId: string, runId: string, title: string, descript
   }
 
   try {
+    const { emitWebhook, getSecretOp } = await import('@/lib/ops.server')
+    if (!process.env.RAILWAY_API_TOKEN) {
+      const userToken = await getSecretOp('railway_api_token')
+      if (userToken) process.env.RAILWAY_API_TOKEN = userToken
+    }
     sandbox = await Sandbox.create({
       environmentId: process.env.RAILWAY_ENVIRONMENT_ID,
       idleTimeoutMinutes: 10,
     })
     await log(taskId, runId, 'run_started', { sandboxId: sandbox.id })
     await db.update(runs).set({ sandboxId: sandbox.id }).where(eq(runs.id, runId))
+    void emitWebhook('run.started', { taskId, runId, sandboxId: sandbox.id, title })
 
     const runCommand = toolDefinition({
       name: 'run_command',
@@ -74,20 +91,41 @@ async function executeRun(taskId: string, runId: string, title: string, descript
       inputSchema: z.object({ command: z.string(), cwd: z.string().optional() }),
     }).server(async (input) => {
       await flushText()
+      // Log the command immediately, then stream stdout/stderr into a
+      // tool_result row as it arrives so the feed updates while the command
+      // is still running.
+      await log(taskId, runId, 'tool_call', { command: input.command })
+      const resultRow = await log(taskId, runId, 'tool_result', { output: '', running: true })
       let output = ''
+      let lastWrite = 0
+      const write = async (final: boolean, exitCode?: number) => {
+        await db
+          .update(activities)
+          .set({
+            payload: {
+              output: trim(output),
+              running: !final,
+              ...(exitCode !== undefined ? { exitCode } : {}),
+            },
+          })
+          .where(eq(activities.id, resultRow.id))
+      }
+      const onChunk = (c: string) => {
+        output += c
+        const now = Date.now()
+        if (now - lastWrite > 700) {
+          lastWrite = now
+          void write(false).catch(() => {})
+        }
+      }
       const res = await sandbox!.exec(input.command, {
         cwd: input.cwd,
         timeoutSec: 180,
-        onStdout: (c: string) => (output += c),
-        onStderr: (c: string) => (output += c),
+        onStdout: onChunk,
+        onStderr: onChunk,
       })
-      const trimmed = output.length > 4000 ? output.slice(0, 4000) + '\n…(truncated)' : output
-      await log(taskId, runId, 'tool_call', {
-        command: input.command,
-        output: trimmed,
-        exitCode: res.exitCode,
-      })
-      return { exitCode: res.exitCode, output: trimmed }
+      await write(true, res.exitCode)
+      return { exitCode: res.exitCode, output: trim(output, 4000) }
     })
 
     const writeFile = toolDefinition({
@@ -115,7 +153,7 @@ async function executeRun(taskId: string, runId: string, title: string, descript
       return { content: trimmed }
     })
 
-    const { adapter } = makeAdapter()
+    const { adapter } = await makeAdapter()
     const stream = chat({
       adapter: adapter as never,
       messages: [
@@ -139,6 +177,10 @@ async function executeRun(taskId: string, runId: string, title: string, descript
       if (c.type === 'TEXT_MESSAGE_CONTENT' && typeof c.delta === 'string') {
         pendingText += c.delta
         fullText += c.delta
+      } else if (c.type === 'TEXT_MESSAGE_END') {
+        // Each assistant message lands in the feed as soon as it completes,
+        // instead of waiting for the next tool call or the end of the run.
+        await flushText()
       } else if (c.type === 'RUN_ERROR' || c.type === 'ERROR') {
         streamError = JSON.stringify(c.error ?? c).slice(0, 400)
       }
@@ -156,6 +198,10 @@ async function executeRun(taskId: string, runId: string, title: string, descript
     await db.update(tasks).set({ status: 'in_review', updatedAt: new Date() }).where(eq(tasks.id, taskId))
     await log(taskId, runId, 'run_finished', { summary })
     await log(taskId, runId, 'status_change', { from: 'in_progress', to: 'in_review' })
+    {
+      const { emitWebhook } = await import('@/lib/ops.server')
+      void emitWebhook('run.finished', { taskId, runId, summary })
+    }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     await db
@@ -164,6 +210,10 @@ async function executeRun(taskId: string, runId: string, title: string, descript
       .where(eq(runs.id, runId))
     await db.update(tasks).set({ status: 'todo', updatedAt: new Date() }).where(eq(tasks.id, taskId))
     await log(taskId, runId, 'run_error', { error: message })
+    {
+      const { emitWebhook } = await import('@/lib/ops.server')
+      void emitWebhook('run.failed', { taskId, runId, error: message })
+    }
   } finally {
     activeRuns.delete(runId)
     if (sandbox) {

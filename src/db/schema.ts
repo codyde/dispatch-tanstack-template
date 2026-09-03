@@ -1,4 +1,4 @@
-import { integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
+import { boolean, integer, jsonb, pgTable, text, timestamp } from 'drizzle-orm/pg-core'
 
 const id = () =>
   text('id')
@@ -52,6 +52,20 @@ export type ActivityKind =
   | 'run_started'
   | 'run_finished'
   | 'run_error'
+
+export const appSettings = pgTable('app_settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+})
+
+export const webhooks = pgTable('webhooks', {
+  id: id(),
+  url: text('url').notNull(),
+  topics: jsonb('topics').$type<string[]>().notNull().default([]),
+  enabled: boolean('enabled').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+})
 
 export const activities = pgTable('activities', {
   id: id(),

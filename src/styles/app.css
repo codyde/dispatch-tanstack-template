@@ -664,11 +664,20 @@ select:focus-visible {
   font-size: 13px;
 }
 
-.sidebar .foot {
+.sidebar-bottom {
   margin-top: auto;
-  padding: 8px 10px;
-  font-size: 12px;
+  border-top: 1px solid var(--line);
+  padding-top: 8px;
+}
+
+.sidebar .proj-link svg {
+  flex-shrink: 0;
   color: var(--faint);
+}
+
+.sidebar .proj-link:hover svg,
+.sidebar .proj-link[data-status='active'] svg {
+  color: var(--accent);
 }
 
 .main {
@@ -982,4 +991,228 @@ select:focus-visible {
   color: var(--faint);
   font-size: 13px;
   padding: 20px 0;
+}
+
+/* ————— settings & webhooks pages ————— */
+
+.page-title {
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 6px;
+}
+
+.page-lede {
+  color: var(--muted);
+  font-size: 13.5px;
+  max-width: 62ch;
+  margin: 0 0 28px;
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 16px 18px;
+  flex-wrap: wrap;
+}
+
+.setting-row + .setting-row {
+  border-top: 1px solid var(--line);
+}
+
+.setting-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 220px;
+  flex: 1;
+}
+
+.setting-info label {
+  font-weight: 600;
+  font-size: 13.5px;
+}
+
+.setting-hint {
+  color: var(--faint);
+  font-size: 12px;
+  max-width: 44ch;
+}
+
+.setting-input {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.setting-input input {
+  width: 280px;
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.setting-badge {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ok);
+  border: 1px solid color-mix(in srgb, var(--ok) 45%, var(--line));
+  border-radius: 99px;
+  padding: 1px 8px;
+}
+
+.settings-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.saved-note {
+  color: var(--ok);
+  font-size: 13px;
+}
+
+.hook-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+
+.hook-form input[type='url'] {
+  font-family: var(--mono);
+  font-size: 12.5px;
+}
+
+.topics {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.topic-check {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-family: var(--mono);
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 4px 11px;
+  cursor: pointer;
+  color: var(--muted);
+  transition: border-color 120ms var(--ease), color 120ms var(--ease);
+}
+
+.topic-check input {
+  display: none;
+}
+
+.topic-check[data-on] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.hook-error {
+  color: var(--accent);
+  font-size: 12.5px;
+  margin-left: 12px;
+}
+
+.hook-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.hook-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 13px 16px;
+  flex-wrap: wrap;
+}
+
+.hook-row[data-disabled] {
+  opacity: 0.55;
+}
+
+.hook-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.hook-url {
+  font-size: 12.5px;
+  overflow-wrap: anywhere;
+}
+
+.hook-topics {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.hook-topics .stack-chip {
+  font-size: 10.5px;
+  padding: 3px 9px;
+}
+
+.hook-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn.danger {
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line));
+}
+
+.running-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--accent-soft);
+}
+
+.pulse-inline {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  display: inline-block;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.exit-line {
+  font-size: 10.5px;
+  color: #6f8a72;
+  margin-top: 4px;
+}
+
+.exit-line[data-fail] {
+  color: var(--accent-soft);
 }

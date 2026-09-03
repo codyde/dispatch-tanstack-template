@@ -13,6 +13,8 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProjectIdRouteImport } from './routes/app.$projectId'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AppWebhooksRouteImport } from './routes/app.webhooks'
 import { Route as ApiV1ProjectsRouteImport } from './routes/api.v1.projects'
 import { Route as AppTaskTaskIdRouteImport } from './routes/app.task.$taskId'
 import { Route as ApiV1TasksTaskIdRouteImport } from './routes/api.v1.tasks.$taskId'
@@ -37,6 +39,16 @@ const AppIndexRoute = AppIndexRouteImport.update({
 const AppProjectIdRoute = AppProjectIdRouteImport.update({
   id: '/$projectId',
   path: '/$projectId',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppWebhooksRoute = AppWebhooksRouteImport.update({
+  id: '/webhooks',
+  path: '/webhooks',
   getParentRoute: () => AppRoute,
 } as any)
 const ApiV1ProjectsRoute = ApiV1ProjectsRouteImport.update({
@@ -70,6 +82,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/webhooks': typeof AppWebhooksRoute
   '/app/': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
@@ -80,6 +94,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/webhooks': typeof AppWebhooksRoute
   '/app': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
@@ -92,6 +108,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
   '/app/$projectId': typeof AppProjectIdRoute
+  '/app/settings': typeof AppSettingsRoute
+  '/app/webhooks': typeof AppWebhooksRoute
   '/app/': typeof AppIndexRoute
   '/api/v1/projects': typeof ApiV1ProjectsRouteWithChildren
   '/app/task/$taskId': typeof AppTaskTaskIdRoute
@@ -105,6 +123,8 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/app/$projectId'
+    | '/app/settings'
+    | '/app/webhooks'
     | '/app/'
     | '/api/v1/projects'
     | '/app/task/$taskId'
@@ -115,6 +135,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/app/$projectId'
+    | '/app/settings'
+    | '/app/webhooks'
     | '/app'
     | '/api/v1/projects'
     | '/app/task/$taskId'
@@ -126,6 +148,8 @@ export interface FileRouteTypes {
     | '/'
     | '/app'
     | '/app/$projectId'
+    | '/app/settings'
+    | '/app/webhooks'
     | '/app/'
     | '/api/v1/projects'
     | '/app/task/$taskId'
@@ -171,6 +195,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppProjectIdRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/webhooks': {
+      id: '/app/webhooks'
+      path: '/webhooks'
+      fullPath: '/app/webhooks'
+      preLoaderRoute: typeof AppWebhooksRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/api/v1/projects': {
       id: '/api/v1/projects'
       path: '/api/v1/projects'
@@ -211,12 +249,16 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppProjectIdRoute: typeof AppProjectIdRoute
+  AppSettingsRoute: typeof AppSettingsRoute
+  AppWebhooksRoute: typeof AppWebhooksRoute
   AppIndexRoute: typeof AppIndexRoute
   AppTaskTaskIdRoute: typeof AppTaskTaskIdRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
   AppProjectIdRoute: AppProjectIdRoute,
+  AppSettingsRoute: AppSettingsRoute,
+  AppWebhooksRoute: AppWebhooksRoute,
   AppIndexRoute: AppIndexRoute,
   AppTaskTaskIdRoute: AppTaskTaskIdRoute,
 }
