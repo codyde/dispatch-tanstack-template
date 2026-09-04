@@ -5,9 +5,10 @@
   "scripts": {
     "dev": "vite dev --port 8080 --host 0.0.0.0",
     "build": "vite build",
-    "start": "node .output/server/index.mjs",
+    "start": "npm run db:setup && srvx --host 0.0.0.0 dist/server/server.js",
     "db:push": "drizzle-kit push",
-    "seed": "tsx scripts/seed.ts"
+    "seed": "tsx scripts/seed.ts",
+    "db:setup": "drizzle-kit push --force && tsx scripts/seed.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.123.0",
@@ -22,6 +23,7 @@
     "railway": "^3.11.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "srvx": "^1.0.3",
     "zod": "^4.5.4"
   },
   "devDependencies": {
