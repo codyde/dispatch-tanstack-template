@@ -136,6 +136,70 @@ export async function deleteProjectOp(id: string) {
   return { ok: true }
 }
 
+function firstLine(s: unknown): string {
+  if (typeof s !== 'string') return ''
+  const line = s.split('\n').find((x) => x.trim())
+  return (line ?? '').trim().slice(0, 140)
+}
+
+function lastNonEmptyLine(s: unknown): string {
+  if (typeof s !== 'string') return ''
+  const lines = s.split('\n').filter((x) => x.trim())
+  return (lines[lines.length - 1] ?? '').trim().slice(0, 140)
+}
+
+function summarizeActivity(kind: string, p: Record<string, unknown>): string {
+  switch (kind) {
+    case 'tool_call':
+      return `$ ${firstLine(p.command)}`
+    case 'tool_result':
+      return p.running === true
+        ? `… ${lastNonEmptyLine(p.output) || 'running'}`
+        : `→ ${lastNonEmptyLine(p.output) || `exit ${p.exitCode ?? '?'}`}`
+    case 'agent_text':
+      return firstLine(p.text)
+    case 'run_started':
+      return '▸ sandbox started'
+    case 'run_finished':
+      return `✓ ${firstLine(p.summary) || 'run finished'}`
+    case 'run_error':
+      return `✗ ${firstLine(p.error) || 'run failed'}`
+    case 'status_change':
+      return `status → ${p.to}`
+    default:
+      return ''
+  }
+}
+
+/** Latest activity per task, condensed to a one-line summary for list rows. */
+async function lastActionsFor(taskIds: string[]): Promise<Record<string, string>> {
+  if (taskIds.length === 0) return {}
+  const rows = await db
+    .selectDistinctOn([activities.taskId], {
+      taskId: activities.taskId,
+      kind: activities.kind,
+      payload: activities.payload,
+    })
+    .from(activities)
+    .where(inArray(activities.taskId, taskIds))
+    .orderBy(activities.taskId, desc(activities.createdAt))
+  const out: Record<string, string> = {}
+  for (const row of rows) {
+    const line = summarizeActivity(row.kind, row.payload ?? {})
+    if (line) out[row.taskId] = line
+  }
+  return out
+}
+
+export async function wipeAllDataOp() {
+  await db.delete(activities)
+  await db.delete(runs)
+  await db.delete(tasks)
+  await db.delete(projects)
+  await db.delete(webhooks)
+  return { ok: true }
+}
+
 export async function listAllTasksOp() {
   const rows = await db
     .select({
@@ -155,7 +219,8 @@ export async function listAllTasksOp() {
             .from(runs)
             .where(and(eq(runs.status, 'running'), inArray(runs.taskId, ids)))
         ).map((r) => r.taskId)
-  return { rows, runningIds }
+  const lastActions = await lastActionsFor(ids)
+  return { rows, runningIds, lastActions }
 }
 
 export async function listTasksOp(projectId: string) {
@@ -173,7 +238,8 @@ export async function listTasksOp(projectId: string) {
             .from(runs)
             .where(and(eq(runs.status, 'running'), inArray(runs.taskId, rows.map((r) => r.id))))
         ).map((r) => r.taskId)
-  return { tasks: rows, runningIds }
+  const lastActions = await lastActionsFor(rows.map((r) => r.id))
+  return { tasks: rows, runningIds, lastActions }
 }
 
 export async function getTaskOp(taskId: string) {

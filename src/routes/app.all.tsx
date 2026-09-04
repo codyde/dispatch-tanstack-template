@@ -1,11 +1,17 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
-import { allTasksQuery } from '@/lib/tracker'
-import { TaskRowMenu } from '@/components/TaskRowMenu'
-import type { TaskStatus } from '@/db/schema'
+import { useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
+import { allTasksQuery, createTask, projectsQuery } from '@/lib/tracker'
+import { TaskListRow } from '@/components/TaskListRow'
+import type { TaskPriority, TaskStatus } from '@/db/schema'
 
 export const Route = createFileRoute('/app/all')({
-  loader: ({ context }) => context.queryClient.ensureQueryData(allTasksQuery),
+  loader: async ({ context }) => {
+    await Promise.all([
+      context.queryClient.ensureQueryData(allTasksQuery),
+      context.queryClient.ensureQueryData(projectsQuery),
+    ])
+  },
   component: AllProjects,
 })
 
@@ -19,7 +25,24 @@ const STATUS_ORDER: { id: TaskStatus; label: string }[] = [
 
 function AllProjects() {
   const { data } = useSuspenseQuery(allTasksQuery)
-  const { rows, runningIds } = data
+  const { rows, runningIds, lastActions } = data
+  const { data: projects } = useSuspenseQuery(projectsQuery)
+  const queryClient = useQueryClient()
+
+  const [title, setTitle] = useState('')
+  const [projectId, setProjectId] = useState('')
+  const [priority, setPriority] = useState<TaskPriority>('medium')
+  const targetProject = projectId || projects[0]?.id || ''
+
+  const create = useMutation({
+    mutationFn: () =>
+      createTask({ data: { projectId: targetProject, title: title.trim(), priority } }),
+    onSuccess: () => {
+      setTitle('')
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+      queryClient.invalidateQueries({ queryKey: ['tasks', targetProject] })
+    },
+  })
 
   return (
     <div>
@@ -32,6 +55,39 @@ function AllProjects() {
         </h1>
       </div>
 
+      {projects.length > 0 && (
+        <form
+          className="new-task"
+          onSubmit={(e) => {
+            e.preventDefault()
+            if (title.trim() && targetProject) create.mutate()
+          }}
+        >
+          <input
+            type="text"
+            placeholder="New task — describe work a sandbox could do…"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <select value={targetProject} onChange={(e) => setProjectId(e.target.value)} aria-label="Project">
+            {projects.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <select value={priority} onChange={(e) => setPriority(e.target.value as TaskPriority)}>
+            <option value="urgent">Urgent</option>
+            <option value="high">High</option>
+            <option value="medium">Medium</option>
+            <option value="low">Low</option>
+          </select>
+          <button className="btn primary" type="submit" disabled={create.isPending || !title.trim()}>
+            Add
+          </button>
+        </form>
+      )}
+
       {STATUS_ORDER.map(({ id, label }) => {
         const group = rows.filter((r) => r.task.status === id)
         if (group.length === 0) return null
@@ -42,25 +98,14 @@ function AllProjects() {
               {label} <span className="n">{group.length}</span>
             </div>
             {group.map(({ task, project }) => (
-              <Link key={task.id} to="/app/task/$taskId" params={{ taskId: task.id }} className="task-row">
-                <span className="status-dot" data-st={task.status} />
-                <span className="proj-chip" style={{ color: project.color, borderColor: `color-mix(in srgb, ${project.color} 45%, var(--line))` }}>
-                  {project.key}
-                </span>
-                <span className="tid">
-                  {project.key}-{task.number}
-                </span>
-                <span className="title">{task.title}</span>
-                {runningIds.includes(task.id) && (
-                  <span className="chip-running">
-                    <span className="pulse" /> sandbox
-                  </span>
-                )}
-                <span className="prio" data-p={task.priority}>
-                  {task.priority}
-                </span>
-                <TaskRowMenu taskId={task.id} projectId={task.projectId} title={task.title} />
-              </Link>
+              <TaskListRow
+                key={task.id}
+                task={task}
+                projectKey={project.key}
+                projectChip={{ key: project.key, color: project.color }}
+                running={runningIds.includes(task.id)}
+                lastAction={lastActions[task.id]}
+              />
             ))}
           </section>
         )

@@ -170,6 +170,15 @@ function TaskDetail() {
         </select>
       </div>
 
+      {activeRun && (
+        <div className="run-banner">
+          <span className="pulse" />
+          Agent working in sandbox{' '}
+          <span className="mono">{String(activeRun.sandboxId ?? '').slice(0, 8) || 'booting…'}</span> · started{' '}
+          {new Date(activeRun.startedAt).toLocaleTimeString()}
+        </div>
+      )}
+
       <textarea
         className="task-desc"
         placeholder="Describe the work. The sandbox agent gets this verbatim."

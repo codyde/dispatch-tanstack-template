@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
 import { createTask, projectsQuery, tasksQuery } from '@/lib/tracker'
-import { TaskRowMenu } from '@/components/TaskRowMenu'
+import { TaskListRow } from '@/components/TaskListRow'
 import type { TaskPriority, TaskStatus } from '@/db/schema'
 
 export const Route = createFileRoute('/app/$projectId')({
@@ -22,7 +22,7 @@ const STATUS_ORDER: { id: TaskStatus; label: string }[] = [
 function Board() {
   const { projectId } = Route.useParams()
   const { data } = useSuspenseQuery(tasksQuery(projectId))
-  const { tasks, runningIds } = data
+  const { tasks, runningIds, lastActions } = data
   const { data: projects } = useSuspenseQuery(projectsQuery)
   const project = projects.find((p) => p.id === projectId)
   const queryClient = useQueryClient()
@@ -86,27 +86,13 @@ function Board() {
               {label} <span className="n">{group.length}</span>
             </div>
             {group.map((t) => (
-              <Link
+              <TaskListRow
                 key={t.id}
-                to="/app/task/$taskId"
-                params={{ taskId: t.id }}
-                className="task-row"
-              >
-                <span className="status-dot" data-st={t.status} />
-                <span className="tid">
-                  {project.key}-{t.number}
-                </span>
-                <span className="title">{t.title}</span>
-                {runningIds.includes(t.id) && (
-                  <span className="chip-running">
-                    <span className="pulse" /> sandbox
-                  </span>
-                )}
-                <span className="prio" data-p={t.priority}>
-                  {t.priority}
-                </span>
-                <TaskRowMenu taskId={t.id} projectId={t.projectId} title={t.title} />
-              </Link>
+                task={t}
+                projectKey={project.key}
+                running={runningIds.includes(t.id)}
+                lastAction={lastActions[t.id]}
+              />
             ))}
           </section>
         )

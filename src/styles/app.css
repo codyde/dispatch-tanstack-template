@@ -304,8 +304,9 @@ select:focus-visible {
      the panel. Padding lives on each view so the slide clips cleanly at the
      panel edge. */
   padding: 0;
-  min-height: 420px;
-  max-height: 520px;
+  /* Sized to roughly the h1 + subtext block, centered against the copy. */
+  height: 290px;
+  align-self: center;
   overflow: hidden;
   display: flex;
 }
@@ -803,6 +804,126 @@ select:focus-visible {
 .task-row:hover .menu,
 .task-row .menu:focus-within {
   opacity: 1;
+}
+
+.task-row .t-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.task-row .t-col .title {
+  flex: none;
+}
+
+.last-action {
+  font-size: 10.5px;
+  color: var(--faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.assign-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 550;
+  color: var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--line));
+  border-radius: 99px;
+  padding: 3px 12px;
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity 120ms var(--ease), background 120ms var(--ease);
+}
+
+.task-row:hover .assign-btn,
+.assign-btn:focus-visible,
+.assign-btn[data-running] {
+  opacity: 1;
+}
+
+.assign-btn:hover:not(:disabled) {
+  background: var(--accent-wash);
+}
+
+.assign-btn:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.assign-btn[data-running] {
+  color: var(--muted);
+  border-color: var(--line);
+}
+
+.assign-btn .pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.run-banner {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--accent-wash);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--line));
+  border-radius: var(--radius);
+  padding: 9px 14px;
+  font-size: 13px;
+  margin-bottom: 18px;
+}
+
+.run-banner .pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse 1.4s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.danger-zone {
+  margin-top: 40px;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--line));
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+}
+
+.danger-zone h2 {
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 12px;
+  color: var(--accent);
+}
+
+.danger-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.danger-row p {
+  color: var(--muted);
+  font-size: 12.5px;
+  margin: 4px 0 0;
+  max-width: 52ch;
+}
+
+.wipe-input {
+  width: 100%;
+  margin-bottom: 16px;
+  font-size: 13px;
 }
 
 .proj-chip {

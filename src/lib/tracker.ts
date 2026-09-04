@@ -121,6 +121,13 @@ export const listAllTasks = createServerFn({ method: 'GET' }).handler(async () =
   return ops.listAllTasksOp()
 })
 
+export const wipeAllData = createServerFn({ method: 'POST' })
+  .validator(z.object({ confirmation: z.literal('delete all data') }))
+  .handler(async () => {
+    const ops = await import('@/lib/ops.server')
+    return ops.wipeAllDataOp()
+  })
+
 export const getRunnerStatus = createServerFn({ method: 'GET' }).handler(async () => {
   const ops = await import('@/lib/ops.server')
   return ops.getRunnerStatusOp()
@@ -180,6 +187,7 @@ export const webhooksQuery = queryOptions({
 export const allTasksQuery = queryOptions({
   queryKey: ['all-tasks'],
   queryFn: () => listAllTasks(),
+  refetchInterval: (q) => (q.state.data?.runningIds.length ? 1500 : false),
 })
 
 export const runnerStatusQuery = queryOptions({
@@ -197,6 +205,8 @@ export const tasksQuery = (projectId: string) =>
   queryOptions({
     queryKey: ['tasks', projectId],
     queryFn: () => listTasks({ data: { projectId } }),
+    // Live rows while any agent is working.
+    refetchInterval: (q) => (q.state.data?.runningIds.length ? 1500 : false),
   })
 
 export const taskQuery = (taskId: string) =>

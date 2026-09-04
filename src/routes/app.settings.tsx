@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query'
-import { saveSettings, settingsQuery } from '@/lib/tracker'
+import { createPortal } from 'react-dom'
+import { saveSettings, settingsQuery, wipeAllData } from '@/lib/tracker'
 import { SETTING_KEYS, type SettingKey } from '@/lib/topics'
 
 export const Route = createFileRoute('/app/settings')({
@@ -68,6 +69,94 @@ function SettingsPage() {
         </button>
         {saved && <span className="saved-note">Saved.</span>}
       </div>
+
+      <DangerZone />
+    </div>
+  )
+}
+
+const WIPE_PHRASE = 'delete all data'
+
+function DangerZone() {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [phrase, setPhrase] = useState('')
+  const [wiped, setWiped] = useState(false)
+
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [open])
+
+  const wipe = useMutation({
+    mutationFn: () => wipeAllData({ data: { confirmation: WIPE_PHRASE } }),
+    onSuccess: () => {
+      setOpen(false)
+      setPhrase('')
+      setWiped(true)
+      queryClient.invalidateQueries()
+    },
+  })
+
+  return (
+    <div className="danger-zone">
+      <h2>Danger zone</h2>
+      <div className="danger-row">
+        <div>
+          <strong>Delete all data</strong>
+          <p>
+            Permanently removes every project, task, run, activity, and webhook destination. API
+            keys in Settings are kept.
+          </p>
+        </div>
+        <button className="btn danger" onClick={() => { setPhrase(''); setOpen(true) }}>
+          Delete All Data
+        </button>
+      </div>
+      {wiped && <span className="saved-note">All data deleted.</span>}
+      {open &&
+        createPortal(
+          <div className="dlg-overlay" onClick={() => setOpen(false)}>
+            <div
+              className="dlg"
+              role="alertdialog"
+              aria-modal="true"
+              aria-label="Delete all data"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3>Delete all data?</h3>
+              <p>
+                This wipes every project, task, run, activity, and webhook. There is no undo. Type{' '}
+                <code className="mono">{WIPE_PHRASE}</code> to confirm.
+              </p>
+              <input
+                autoFocus
+                type="text"
+                className="wipe-input mono"
+                placeholder={WIPE_PHRASE}
+                value={phrase}
+                onChange={(e) => setPhrase(e.target.value)}
+              />
+              <div className="dlg-actions">
+                <button className="btn" onClick={() => setOpen(false)}>
+                  Cancel
+                </button>
+                <button
+                  className="btn danger-solid"
+                  disabled={phrase.trim() !== WIPE_PHRASE || wipe.isPending}
+                  onClick={() => wipe.mutate()}
+                >
+                  {wipe.isPending ? 'Deleting…' : 'Delete everything'}
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body,
+        )}
     </div>
   )
 }
