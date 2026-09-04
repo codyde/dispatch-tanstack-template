@@ -132,7 +132,6 @@ export function MiniDispatch({ aiReady, railwayReady }: { aiReady: boolean; rail
               <span className="swatch" style={{ background: 'var(--accent)' }} />
               Dispatch
             </span>
-            <span className="mini-hint">sample data · click a dot · run a task</span>
           </div>
           <form
             className="mini-add"
