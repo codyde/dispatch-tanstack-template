@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
+import { Route as ApiHealthRouteImport } from './routes/api.health'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppProjectIdRouteImport } from './routes/app.$projectId'
 import { Route as AppAllRouteImport } from './routes/app.all'
@@ -31,6 +32,11 @@ const IndexRoute = IndexRouteImport.update({
 const AppRoute = AppRouteImport.update({
   id: '/app',
   path: '/app',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AppIndexRoute = AppIndexRouteImport.update({
@@ -93,6 +99,7 @@ const ApiV1TasksTaskIdRunRoute = ApiV1TasksTaskIdRunRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/app/$projectId': typeof AppProjectIdRoute
   '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
@@ -107,6 +114,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/health': typeof ApiHealthRoute
   '/app/$projectId': typeof AppProjectIdRoute
   '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/api/health': typeof ApiHealthRoute
   '/app/$projectId': typeof AppProjectIdRoute
   '/app/all': typeof AppAllRoute
   '/app/settings': typeof AppSettingsRoute
@@ -140,6 +149,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/api/health'
     | '/app/$projectId'
     | '/app/all'
     | '/app/settings'
@@ -154,6 +164,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/api/health'
     | '/app/$projectId'
     | '/app/all'
     | '/app/settings'
@@ -169,6 +180,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/app'
+    | '/api/health'
     | '/app/$projectId'
     | '/app/all'
     | '/app/settings'
@@ -185,6 +197,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiV1ProjectsRoute: typeof ApiV1ProjectsRouteWithChildren
   ApiV1TasksTaskIdRoute: typeof ApiV1TasksTaskIdRouteWithChildren
 }
@@ -203,6 +216,13 @@ declare module '@tanstack/react-router' {
       path: '/app'
       fullPath: '/app'
       preLoaderRoute: typeof AppRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/app/': {
@@ -345,6 +365,7 @@ const ApiV1TasksTaskIdRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  ApiHealthRoute: ApiHealthRoute,
   ApiV1ProjectsRoute: ApiV1ProjectsRouteWithChildren,
   ApiV1TasksTaskIdRoute: ApiV1TasksTaskIdRouteWithChildren,
 }
