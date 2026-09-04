@@ -213,4 +213,6 @@ export const taskQuery = (taskId: string) =>
   queryOptions({
     queryKey: ['task', taskId],
     queryFn: () => getTask({ data: { taskId } }),
+    // Live feed while a sandbox run is active (stops when the run ends).
+    refetchInterval: (q) => (q.state.data?.activeRun ? 1200 : false),
   })

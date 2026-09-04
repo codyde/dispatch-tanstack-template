@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import {
   HeadContent,
+  Link,
+  Outlet,
   Scripts,
   createRootRouteWithContext,
 } from '@tanstack/react-router'
@@ -30,6 +32,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
   }),
   shellComponent: RootDocument,
+  component: () => <Outlet />,
+  errorComponent: ({ error }) => (
+    <div className="fallback-page">
+      <h1>Something broke</h1>
+      <p>{error instanceof Error ? error.message : 'An unexpected error occurred.'}</p>
+      <Link to="/app/all" className="btn primary">
+        Back to the board
+      </Link>
+    </div>
+  ),
+  notFoundComponent: () => (
+    <div className="fallback-page">
+      <h1>Not found</h1>
+      <p>That page or task doesn't exist (anymore).</p>
+      <Link to="/app/all" className="btn primary">
+        Back to the board
+      </Link>
+    </div>
+  ),
 })
 
 function RootDocument({ children }: { children: ReactNode }) {

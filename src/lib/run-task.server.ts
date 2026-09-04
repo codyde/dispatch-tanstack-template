@@ -155,20 +155,20 @@ async function executeRun(taskId: string, runId: string, title: string, descript
 
     const { adapter } = await makeAdapter()
     const stream = chat({
-      adapter: adapter as never,
+      adapter,
       messages: [
         {
           role: 'user',
           content: `Task: ${title}\n\n${description || '(no further description)'}\n\nComplete this task inside the sandbox now. Verify your work, then finish with a short plain-text summary starting with "SUMMARY:" describing what you did and where any outputs live.`,
         },
-      ] as never,
+      ],
       systemPrompts: [
         'You are the Dispatch task-execution agent. You work inside a fresh, disposable Railway sandbox VM using the tools provided. Be direct and efficient: do the work, verify it ran, and stop. Never ask questions — decide and act.',
       ],
-      tools: [runCommand, writeFile, readFile] as never,
+      tools: [runCommand, writeFile, readFile],
       agentLoopStrategy: maxIterations(25),
       abortController: abort,
-    } as never)
+    })
 
     let fullText = ''
     let streamError: string | null = null
@@ -181,7 +181,7 @@ async function executeRun(taskId: string, runId: string, title: string, descript
         // Each assistant message lands in the feed as soon as it completes,
         // instead of waiting for the next tool call or the end of the run.
         await flushText()
-      } else if (c.type === 'RUN_ERROR' || c.type === 'ERROR') {
+      } else if (c.type === 'RUN_ERROR') {
         streamError = JSON.stringify(c.error ?? c).slice(0, 400)
       }
     }

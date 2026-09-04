@@ -11,6 +11,9 @@ export function getRouter() {
     routeTree,
     context: { queryClient },
     defaultPreload: 'intent',
+    // Required when React Query owns the cache: without this, Router's own
+    // 30s preload cache overrides Query's staleTime on link hover.
+    defaultPreloadStaleTime: 0,
     scrollRestoration: true,
   })
   setupRouterSsrQueryIntegration({ router, queryClient })

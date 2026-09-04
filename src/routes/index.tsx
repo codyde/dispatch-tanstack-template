@@ -12,22 +12,22 @@ const BENEFITS = [
   {
     k: '01 · DEPLOY',
     t: 'Zero-config deploys',
-    d: 'Push a TanStack Start repo and Railway builds it — Railpack detects Start, Vite, and your package manager. No Dockerfile, no adapter config.',
+    d: 'Push a TanStack Start repo and Railway builds it. Railpack figures out Start, Vite, and your package manager on its own, so you never write a Dockerfile.',
   },
   {
     k: '02 · DATA',
     t: 'Postgres in one click',
-    d: 'This tracker persists to a Railway Postgres provisioned next to the app, connected over private networking. Redis, MySQL, and Mongo work the same way.',
+    d: 'The tracker stores everything in a Railway Postgres that lives next to the app and talks to it over private networking. Redis, MySQL, and Mongo work the same way.',
   },
   {
     k: '03 · COMPUTE',
     t: 'Sandboxes as a primitive',
-    d: 'Every task you run in Dispatch boots a real Railway sandbox VM via the SDK — isolated compute your app creates and destroys at runtime.',
+    d: 'When you run a task, Dispatch calls the Railway SDK to boot a real sandbox VM, then destroys it when the work is done. Your app creates compute at runtime.',
   },
   {
     k: '04 · SHIP',
     t: 'Environments per PR',
-    d: 'Preview environments clone your services — app and database — per pull request, so every branch of your tracker is a working tracker.',
+    d: 'Open a pull request and Railway clones the whole project into a preview environment, database included. Every branch is a working copy of the tracker.',
   },
 ]
 
@@ -64,10 +64,10 @@ function Home() {
             Run TanStack on <em>Railway.</em>
           </h1>
           <p className="sub">
-            Dispatch is a work tracker built with <strong>TanStack Start</strong>,{' '}
-            <strong>TanStack AI</strong>, and <strong>Postgres</strong> — with one twist: tasks
-            don't just sit on a board. Click run, and a <strong>Railway sandbox</strong> boots a
-            real VM where an agent executes the work and streams it back into the task.
+            Dispatch is a work tracker built on <strong>TanStack Start</strong>,{' '}
+            <strong>TanStack AI</strong>, and <strong>Postgres</strong>. Every task has a run
+            button. Press it and a <strong>Railway sandbox</strong> boots, an agent works the task
+            inside a real VM, and the output streams back into the activity feed.
           </p>
           <div className="hero-actions">
             <Link to="/app" className="btn primary">
@@ -95,8 +95,8 @@ function Home() {
       <section className="section">
         <h2>What Railway gives a TanStack app</h2>
         <p className="lede">
-          Everything in this template runs on Railway primitives — the same ones you get on any
-          project.
+          Nothing here is special-cased for the demo. The template runs on the same pieces you get
+          in any Railway project.
         </p>
         <div className="benefits">
           {BENEFITS.map((b) => (
@@ -131,10 +131,10 @@ function Home() {
       </section>
 
       <section className="section">
-        <h2>A real API, out of the box</h2>
+        <h2>There's an API too</h2>
         <p className="lede">
-          Everything the UI does goes through server functions backed by the same operations as
-          the public REST API — query it from scripts, agents, or your own tools.
+          The UI and the REST API share one set of operations, so anything you can do with a click
+          you can also do from a script or an agent.
         </p>
         <div className="term api-term">
           <div className="cmd">curl -s $APP_URL/api/v1/projects</div>
@@ -151,7 +151,7 @@ function Home() {
 
       <footer className="home-footer">
         <div className="inner">
-          <span>Built to hand to a team — fork it, point it at your own Railway project.</span>
+          <span>Fork it, point it at your own Railway project, and make it yours.</span>
           <div className="brand-logos">
             <img src="/brand/tanstack.png" alt="TanStack" />
             <img src="/brand/railway-light.svg" alt="Railway" className="logo-light" />

@@ -145,6 +145,31 @@ select:focus-visible {
 
 /* ————— shared bits ————— */
 
+.fallback-page {
+  min-height: 70vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+  padding: 32px;
+}
+
+.fallback-page h1 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+.fallback-page p {
+  color: var(--muted);
+  margin: 0 0 12px;
+  max-width: 50ch;
+}
+
 .btn {
   display: inline-flex;
   align-items: center;

@@ -30,15 +30,8 @@ function TaskDetail() {
         ).replace(/^SUMMARY:\s*/i, '') || null
       : null
 
-  // Poll while a sandbox run is active so the feed streams in.
-  useEffect(() => {
-    if (!running) return
-    const t = setInterval(
-      () => queryClient.invalidateQueries({ queryKey: ['task', taskId] }),
-      1200,
-    )
-    return () => clearInterval(t)
-  }, [running, taskId, queryClient])
+  // Polling while a run is active is handled declaratively by taskQuery's
+  // refetchInterval (see src/lib/tracker.ts).
 
   const [desc, setDesc] = useState(task.description)
   useEffect(() => setDesc(task.description), [task.id, task.description])
@@ -46,10 +39,12 @@ function TaskDetail() {
   const patch = useMutation({
     mutationFn: (data: Partial<{ status: TaskStatus; priority: TaskPriority; description: string; title: string }>) =>
       updateTask({ data: { taskId, ...data } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['task', taskId] })
-      queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] })
-    },
+    onSuccess: () =>
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['task', taskId] }),
+        queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['all-tasks'] }),
+      ]),
   })
 
   const run = useMutation({
@@ -68,17 +63,21 @@ function TaskDetail() {
 
   const duplicate = useMutation({
     mutationFn: () => duplicateTask({ data: { taskId } }),
-    onSuccess: (copy) => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] })
-      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+    onSuccess: async (copy) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['all-tasks'] }),
+      ])
       navigate({ to: '/app/task/$taskId', params: { taskId: copy.id } })
     },
   })
   const remove = useMutation({
     mutationFn: () => deleteTask({ data: { taskId } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] })
-      queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['tasks', task.projectId] }),
+        queryClient.invalidateQueries({ queryKey: ['all-tasks'] }),
+      ])
       navigate({ to: '/app/$projectId', params: { projectId: task.projectId } })
     },
   })

@@ -15,11 +15,12 @@ export function TaskRowMenu({
 }) {
   const queryClient = useQueryClient()
   const [confirming, setConfirming] = useState(false)
-  const refresh = () => {
-    queryClient.invalidateQueries({ queryKey: ['tasks', projectId] })
-    queryClient.invalidateQueries({ queryKey: ['all-tasks'] })
-    queryClient.invalidateQueries({ queryKey: ['task', taskId] })
-  }
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['tasks', projectId] }),
+      queryClient.invalidateQueries({ queryKey: ['all-tasks'] }),
+      queryClient.invalidateQueries({ queryKey: ['task', taskId] }),
+    ])
 
   const duplicate = useMutation({ mutationFn: () => duplicateTask({ data: { taskId } }), onSuccess: refresh })
   const markDone = useMutation({
