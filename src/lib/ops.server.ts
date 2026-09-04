@@ -197,6 +197,10 @@ export async function wipeAllDataOp() {
   await db.delete(tasks)
   await db.delete(projects)
   await db.delete(webhooks)
+  // Restore the Default starter project so the workspace is immediately
+  // usable for revalidation after a wipe.
+  const { seedDefaults } = await import('@/lib/seed.server')
+  await seedDefaults(db)
   return { ok: true }
 }
 

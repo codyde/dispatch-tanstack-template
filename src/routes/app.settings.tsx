@@ -109,8 +109,8 @@ function DangerZone() {
         <div>
           <strong>Delete all data</strong>
           <p>
-            Permanently removes every project, task, run, activity, and webhook destination. API
-            keys in Settings are kept.
+            Permanently removes every project, task, run, activity, and webhook destination, then
+            restores the Default starter project. API keys in Settings are kept.
           </p>
         </div>
         <button className="btn danger" onClick={() => { setPhrase(''); setOpen(true) }}>
@@ -130,7 +130,8 @@ function DangerZone() {
             >
               <h3>Delete all data?</h3>
               <p>
-                This wipes every project, task, run, activity, and webhook. There is no undo. Type{' '}
+                This wipes every project, task, run, activity, and webhook, then restores the
+                Default starter project. There is no undo. Type{' '}
                 <code className="mono">{WIPE_PHRASE}</code> to confirm.
               </p>
               <input

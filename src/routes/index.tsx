@@ -82,6 +82,17 @@ function Home() {
       </header>
 
       <section className="section">
+        <h2>The stack</h2>
+        <div className="stack-row">
+          {STACK.map((s) => (
+            <span className="stack-chip" key={s}>
+              {s}
+            </span>
+          ))}
+        </div>
+      </section>
+
+      <section className="section">
         <h2>What Railway gives a TanStack app</h2>
         <p className="lede">
           Everything in this template runs on Railway primitives — the same ones you get on any
@@ -135,17 +146,6 @@ function Home() {
           <div className="out">{'{'} "id": "…", "number": 4, "status": "todo", … {'}'}</div>
           <div className="cmd">curl -s -X POST $APP_URL/api/v1/tasks/&lt;id&gt;/run</div>
           <div className="out">{'{'} "runId": "…" {'}'} — a sandbox picks the task up</div>
-        </div>
-      </section>
-
-      <section className="section">
-        <h2>The stack</h2>
-        <div className="stack-row">
-          {STACK.map((s) => (
-            <span className="stack-chip" key={s}>
-              {s}
-            </span>
-          ))}
         </div>
       </section>
 
