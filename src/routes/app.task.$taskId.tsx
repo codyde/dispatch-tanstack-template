@@ -21,10 +21,13 @@ function TaskDetail() {
   // The final agent message of the last successful run — the "closed loop".
   const agentResult =
     !running && lastRun?.status === 'succeeded'
-      ? ((feed.filter((a) => a.runId === lastRun.id && a.kind === 'agent_text').at(-1)?.payload as { text?: string } | undefined)
-          ?.text ??
-        lastRun.summary ??
-        null)
+      ? (
+          (feed.filter((a) => a.runId === lastRun.id && a.kind === 'agent_text').at(-1)?.payload as
+            | { text?: string }
+            | undefined)?.text ??
+          lastRun.summary ??
+          ''
+        ).replace(/^SUMMARY:\s*/i, '') || null
       : null
 
   // Poll while a sandbox run is active so the feed streams in.
