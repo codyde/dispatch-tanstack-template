@@ -81,7 +81,7 @@ function Home() {
         <MiniDispatch aiReady={runner.aiReady} railwayReady={runner.railwayReady} />
       </header>
 
-      <section className="section">
+      <section className="section stack-section">
         <h2>The stack</h2>
         <div className="stack-row">
           {STACK.map((s) => (

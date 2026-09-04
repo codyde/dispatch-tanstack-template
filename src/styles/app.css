@@ -501,6 +501,15 @@ select:focus-visible {
   padding: 40px 32px;
 }
 
+.section.stack-section {
+  padding-top: 4px;
+  padding-bottom: 12px;
+}
+
+.section.stack-section > h2 {
+  margin-bottom: 14px;
+}
+
 .section > h2 {
   font-family: var(--display);
   font-size: 26px;
