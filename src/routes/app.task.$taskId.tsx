@@ -14,9 +14,18 @@ export const Route = createFileRoute('/app/task/$taskId')({
 function TaskDetail() {
   const { taskId } = Route.useParams()
   const { data } = useSuspenseQuery(taskQuery(taskId))
-  const { task, project, feed, activeRun } = data
+  const { task, project, feed, activeRun, lastRun } = data
   const queryClient = useQueryClient()
   const running = activeRun != null
+
+  // The final agent message of the last successful run — the "closed loop".
+  const agentResult =
+    !running && lastRun?.status === 'succeeded'
+      ? ((feed.filter((a) => a.runId === lastRun.id && a.kind === 'agent_text').at(-1)?.payload as { text?: string } | undefined)
+          ?.text ??
+        lastRun.summary ??
+        null)
+      : null
 
   // Poll while a sandbox run is active so the feed streams in.
   useEffect(() => {
@@ -187,6 +196,21 @@ function TaskDetail() {
         onBlur={() => desc !== task.description && patch.mutate({ description: desc })}
       />
 
+      {agentResult && (
+        <div className="results-card">
+          <h2>
+            <CheckIcon /> Agent Results
+          </h2>
+          <div className="results-body">{agentResult}</div>
+          {lastRun?.finishedAt && (
+            <div className="results-meta mono">
+              sandbox {String(lastRun.sandboxId ?? '').slice(0, 8)} · finished{' '}
+              {new Date(lastRun.finishedAt).toLocaleTimeString()}
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="feed">
         <h2>
           Activity
@@ -209,6 +233,14 @@ function TaskDetail() {
         )}
       </div>
     </div>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M20 6 9 17l-5-5" />
+    </svg>
   )
 }
 

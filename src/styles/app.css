@@ -1220,6 +1220,39 @@ select:focus-visible {
   line-height: 1.6;
 }
 
+/* agent results */
+.results-card {
+  border: 1px solid color-mix(in srgb, var(--ok) 40%, var(--line));
+  background: color-mix(in srgb, var(--ok) 6%, var(--surface));
+  border-radius: var(--radius-lg);
+  padding: 16px 18px;
+  margin-bottom: 26px;
+}
+
+.results-card h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: var(--ok);
+}
+
+.results-body {
+  font-size: 13.5px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.results-meta {
+  margin-top: 12px;
+  font-size: 10.5px;
+  color: var(--faint);
+}
+
 /* activity feed */
 .feed h2 {
   font-family: var(--display);

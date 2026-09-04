@@ -260,7 +260,13 @@ export async function getTaskOp(taskId: string) {
     .from(runs)
     .where(and(eq(runs.taskId, task.id), eq(runs.status, 'running')))
     .limit(1)
-  return { task, project, feed, activeRun: activeRun ?? null }
+  const [lastRun] = await db
+    .select()
+    .from(runs)
+    .where(eq(runs.taskId, task.id))
+    .orderBy(desc(runs.startedAt))
+    .limit(1)
+  return { task, project, feed, activeRun: activeRun ?? null, lastRun: lastRun ?? null }
 }
 
 export async function createTaskOp(input: {
