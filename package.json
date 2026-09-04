@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 8080 --host 0.0.0.0",
     "build": "vite build",
-    "start": "npm run db:setup && srvx --host 0.0.0.0 --static dist/client dist/server/server.js",
+    "start": "npm run db:setup && srvx --host 0.0.0.0 --dir . --entry dist/server/server.js --static dist/client",
     "db:push": "drizzle-kit push",
     "seed": "tsx scripts/seed.ts",
     "db:setup": "drizzle-kit push --force && tsx scripts/seed.ts"
