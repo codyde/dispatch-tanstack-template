@@ -1,13 +1,9 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { MiniDispatch } from '@/components/MiniDispatch'
-import { HeroDiagram } from '@/components/HeroDiagram'
 import { runnerStatusQuery } from '@/lib/tracker'
 
 export const Route = createFileRoute('/')({
-  // /?hero=preview shows the interactive mini app instead of the diagram.
-  validateSearch: (search: Record<string, unknown>): { hero?: string } =>
-    typeof search.hero === 'string' ? { hero: search.hero } : {},
   loader: ({ context }) => context.queryClient.ensureQueryData(runnerStatusQuery),
   component: Home,
 })
@@ -47,7 +43,6 @@ const STACK = [
 
 function Home() {
   const { data: runner } = useSuspenseQuery(runnerStatusQuery)
-  const { hero } = Route.useSearch()
   return (
     <div className="home">
       <nav className="home-nav">
@@ -83,11 +78,7 @@ function Home() {
             </a>
           </div>
         </div>
-        {hero === 'preview' ? (
-          <MiniDispatch aiReady={runner.aiReady} railwayReady={runner.railwayReady} />
-        ) : (
-          <HeroDiagram />
-        )}
+        <MiniDispatch aiReady={runner.aiReady} railwayReady={runner.railwayReady} />
       </header>
 
       <section className="section stack-section">
