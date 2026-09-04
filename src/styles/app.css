@@ -1592,3 +1592,11 @@ select:focus-visible {
 .exit-line[data-fail] {
   color: var(--accent-soft);
 }
+
+.sys.thinking {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--faint);
+  font-style: italic;
+}

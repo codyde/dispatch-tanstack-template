@@ -200,9 +200,21 @@ function TaskDetail() {
         {feed.map((a) => (
           <FeedItem key={a.id} a={a} />
         ))}
+        {running && !feedIsStreaming(feed) && (
+          <div className="feed-item">
+            <div className="sys thinking">
+              <span className="pulse-inline" /> agent is thinking…
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
+}
+
+function feedIsStreaming(feed: Array<{ kind: string; payload: Record<string, unknown> }>) {
+  const last = feed[feed.length - 1]
+  return last?.kind === 'tool_result' && (last.payload as { running?: boolean }).running === true
 }
 
 function FeedItem({ a }: { a: { id: string; kind: string; payload: Record<string, unknown>; createdAt: string | Date } }) {
